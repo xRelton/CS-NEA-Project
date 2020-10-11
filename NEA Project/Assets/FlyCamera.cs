@@ -31,7 +31,7 @@ public class FlyCamera : MonoBehaviour {
         Vector3 oldPosition = transform.position;
         transform.Translate(p * Time.deltaTime);
         float zoomAbs = Math.Abs(transform.position.z);
-        bounds[0][1] = 12.065f - (0.05625f / zoomAbs) - (1.32875f * zoomAbs); // I used simultaneous equations on the bounds to calculate the values for the equation that means the camera boundaries match its zoom
+        bounds[0][1] = 12.065f - (0.05625f / zoomAbs) - (1.32875f * zoomAbs); // I used simultaneous equations on the bounds to calculate the values for the equation so the camera boundaries expand to match its zoom
         bounds[1][1] = 5.72f - (0.16875f / zoomAbs) - (0.58125f * zoomAbs);
         bounds[0][0] = -bounds[0][1];
         bounds[1][0] = -bounds[1][1];
