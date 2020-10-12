@@ -57,7 +57,8 @@
   <ItemGroup>
      <Compile Include="Assets\PortMechanics.cs" />
      <Compile Include="Assets\FlyCamera.cs" />
-     <Compile Include="Assets\port_mechanics.cs" />
+     <Compile Include="Assets\InteractiveComponents.cs" />
+     <Compile Include="Assets\GameSpeedControl.cs" />
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>E:/Projects/Computer Science NEA/Merchant of the Sea/NEA Project/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
  </Reference>
