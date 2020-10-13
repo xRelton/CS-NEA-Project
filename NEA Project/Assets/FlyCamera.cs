@@ -37,11 +37,15 @@ public class FlyCamera : MonoBehaviour {
         bounds[1][0] = -bounds[1][1];
         if (GetCurrentBound('x') != 'i') {
             SetTransform('x', oldPosition.x);
-            BoundCorrect('x');
+            if (transform.position.z > -8.75) {
+                BoundCorrect('x');
+            }
         }
         if (GetCurrentBound('y') != 'i') {
             SetTransform('y', oldPosition.y);
-            BoundCorrect('y');
+            if (transform.position.z > -8.75) {
+                BoundCorrect('y');
+            }
         }
         if (GetCurrentBound('z') != 'i') {
             SetTransform('z', oldPosition.z);

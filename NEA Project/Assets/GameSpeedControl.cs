@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
 
 public class GameSpeedControl : MonoBehaviour {
@@ -12,6 +11,9 @@ public class GameSpeedControl : MonoBehaviour {
     }
     // Update is called once per frame
     void Update() {
+        float zoomAbs = Math.Abs(Camera.main.transform.position.z)/9;
+        transform.position = new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y, 0);
+        transform.localScale = new Vector3(zoomAbs, zoomAbs, 1);
         Vector2 mousePos = interactions.GetMousePos();
         for (int i = 0; i < transform.childCount; i++) {
             if (interactions.PointOnObject(mousePos, interactions.GetFChild("game-speed", i))) {
