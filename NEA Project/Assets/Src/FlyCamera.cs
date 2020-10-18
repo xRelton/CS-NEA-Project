@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Net.Mime;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using UnityEngine;
 
 public class FlyCamera : MonoBehaviour {
@@ -19,36 +13,38 @@ public class FlyCamera : MonoBehaviour {
 
     void Update() {
         // Keyboard commands
-        Vector3 p = GetBaseInput();
-        if (Input.GetKey(KeyCode.LeftShift)) {
-            p = p * shiftAdd;
-            p.x = Mathf.Clamp(p.x, -maxShift, maxShift);
-            p.y = Mathf.Clamp(p.y, -maxShift, maxShift);
-            p.z = Mathf.Clamp(p.z, -maxShift, maxShift);
-        } else {
-            p = p * mainSpeed;
-        }
-        Vector3 oldPosition = transform.position;
-        transform.Translate(p * Time.deltaTime);
-        float zoomAbs = Math.Abs(transform.position.z);
-        bounds[0][1] = 12.065f - (0.05625f / zoomAbs) - (1.32875f * zoomAbs); // I used simultaneous equations on the bounds to calculate the values for the equation so the camera boundaries expand to match its zoom
-        bounds[1][1] = 5.72f - (0.16875f / zoomAbs) - (0.58125f * zoomAbs);
-        bounds[0][0] = -bounds[0][1];
-        bounds[1][0] = -bounds[1][1];
-        if (GetCurrentBound('x') != 'i') {
-            SetTransform('x', oldPosition.x);
-            if (transform.position.z > -8.75) {
-                BoundCorrect('x');
+        if (GameObject.Find("Interactive Object").transform.GetChild(1).GetChild(1).gameObject.activeSelf == false) {
+            Vector3 p = GetCameraControlInputs();
+            if (Input.GetKey(KeyCode.LeftShift)) {
+                p = p * shiftAdd;
+                p.x = Mathf.Clamp(p.x, -maxShift, maxShift);
+                p.y = Mathf.Clamp(p.y, -maxShift, maxShift);
+                p.z = Mathf.Clamp(p.z, -maxShift, maxShift);
+            } else {
+                p = p * mainSpeed;
             }
-        }
-        if (GetCurrentBound('y') != 'i') {
-            SetTransform('y', oldPosition.y);
-            if (transform.position.z > -8.75) {
-                BoundCorrect('y');
+            Vector3 oldPosition = transform.position;
+            transform.Translate(p * Time.deltaTime);
+            float zoomAbs = Math.Abs(transform.position.z);
+            bounds[0][1] = 12.065f - (0.05625f / zoomAbs) - (1.32875f * zoomAbs); // I used simultaneous equations on the bounds to calculate the values for the equation so the camera boundaries expand to match its zoom
+            bounds[1][1] = 5.72f - (0.16875f / zoomAbs) - (0.58125f * zoomAbs);
+            bounds[0][0] = -bounds[0][1];
+            bounds[1][0] = -bounds[1][1];
+            if (GetCurrentBound('x') != 'i') {
+                SetTransform('x', oldPosition.x);
+                if (transform.position.z < -3.02 && transform.position.z > -8.98) {
+                    BoundCorrect('x', zoomAbs);
+                }
             }
-        }
-        if (GetCurrentBound('z') != 'i') {
-            SetTransform('z', oldPosition.z);
+            if (GetCurrentBound('y') != 'i') {
+                SetTransform('y', oldPosition.y);
+                if (transform.position.z < -3.02 && transform.position.z > -8.98) {
+                    BoundCorrect('y', zoomAbs);
+                }
+            }
+            if (GetCurrentBound('z') != 'i') {
+                SetTransform('z', oldPosition.z);
+            }
         }
     }
 
@@ -92,16 +88,19 @@ public class FlyCamera : MonoBehaviour {
         return 'n'; // stands for "no correct choice given"
     }
 
-    private void BoundCorrect(char choice) {
+    private void BoundCorrect(char choice, float zoomEffector) {
         char currentBound = GetCurrentBound(choice);
+        if (choice == 'x') {
+            zoomEffector /= 3;
+        }
         if (currentBound == '<') {
-            AddTransform(choice, 0.3f);
+            AddTransform(choice, (float)Math.Pow(1.29155f, -zoomEffector));
         } else if (currentBound == '>') {
-            AddTransform(choice, -0.3f);
+            AddTransform(choice, -(float)Math.Pow(1.29155f, -zoomEffector));
         }
     }
 
-    private Vector3 GetBaseInput() { // Returns the basic values, if it's 0 than it's not active.
+    private Vector3 GetCameraControlInputs() { // Returns the basic values, if it's 0 then it's not active.
         Vector3 p_Velocity = new Vector3();
         if (Input.GetKey(KeyCode.W)) {
             p_Velocity += new Vector3(0, 1, 0);

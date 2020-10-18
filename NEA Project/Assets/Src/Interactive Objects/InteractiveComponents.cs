@@ -2,6 +2,10 @@
 using UnityEngine;
 
 public class InteractiveComponents : MonoBehaviour {
+    public Color MyGrey;
+    public void Start() {
+        MyGrey = new Color(0.7f, 0.7f, 0.7f);
+    }
     public Vector2 GetMousePos() {
         float zoomAbs = Math.Abs(Camera.main.transform.position.z);
         Vector2 screenCentreInWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -13,8 +17,8 @@ public class InteractiveComponents : MonoBehaviour {
         return screenCentreInWorld + mousePosOnScreen;
     }
 
-    public bool PointOnObject(Vector2 Point, GameObject objChecked) {
-        Collider2D objHit = Physics2D.Raycast(Point, Vector2.zero).collider;
+    public bool MouseOnObject(GameObject objChecked) {
+        Collider2D objHit = Physics2D.Raycast(GetMousePos(), Vector2.zero).collider;
         if (objHit != null) {
             return (objHit.name == objChecked.name);
         }
