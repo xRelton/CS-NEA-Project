@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MarketScreenController : MonoBehaviour {
+public class UIScreenController : MonoBehaviour {
     InteractiveComponents Interactions;
-    public string PortName;
+    public string ScreenType;
+    public string Title;
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
@@ -13,6 +14,6 @@ public class MarketScreenController : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        Interactions.GetCOChild("Market Screen", 1, 0).GetComponent<Text>().text = PortName;
+        Interactions.GetCOC("UI Screen", 1, 0).GetComponent<Text>().text = Title;
     }
 }

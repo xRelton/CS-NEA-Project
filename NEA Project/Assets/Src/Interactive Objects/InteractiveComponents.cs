@@ -25,13 +25,13 @@ public class InteractiveComponents : MonoBehaviour {
         return false;
     }
 
-    public GameObject GetFChild(string parentName, int cNum) { // Gets from first set of children
+    public GameObject GetC(string parentName, int cNum) { // Gets from immediate child
         GameObject allChildren = GameObject.Find(parentName);
         return allChildren.transform.GetChild(cNum).gameObject;
     }
 
-    public GameObject GetCOChild(string parentName, int cNumA, int cNumB) { // Gets the child of the initial child
-        GameObject firstChild = GetFChild(parentName, cNumA);
+    public GameObject GetCOC(string parentName, int cNumA, int cNumB) { // Gets the child of the initial child
+        GameObject firstChild = GetC(parentName, cNumA);
         return firstChild.transform.GetChild(cNumB).gameObject;
     }
 }

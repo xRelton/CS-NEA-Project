@@ -13,7 +13,7 @@ public class FlyCamera : MonoBehaviour {
 
     void Update() {
         // Keyboard commands
-        if (GameObject.Find("Interactive Object").transform.GetChild(1).GetChild(1).gameObject.activeSelf == false) {
+        if (GameObject.Find("Interactive Object").transform.GetChild(0).GetChild(1).gameObject.activeSelf == false) {
             Vector3 p = GetCameraControlInputs();
             if (Input.GetKey(KeyCode.LeftShift)) {
                 p = p * shiftAdd;
@@ -32,7 +32,7 @@ public class FlyCamera : MonoBehaviour {
             bounds[1][0] = -bounds[1][1];
             if (GetCurrentBound('x') != 'i') {
                 SetTransform('x', oldPosition.x);
-                if (transform.position.z < -3.02 && transform.position.z > -8.98) {
+                if (transform.position.z < -3.02 && transform.position.z > -8.955) {
                     BoundCorrect('x', zoomAbs);
                 }
             }
