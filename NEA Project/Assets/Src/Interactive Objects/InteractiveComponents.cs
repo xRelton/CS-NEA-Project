@@ -25,12 +25,12 @@ public class InteractiveComponents : MonoBehaviour {
         return false;
     }
 
-    public GameObject GetC(string parentName, int cNum) { // Gets from immediate child
+    public GameObject GetC(string parentName, int cNum) { // Gets from immediate child of gameobject with name parentName
         GameObject allChildren = GameObject.Find(parentName);
         return allChildren.transform.GetChild(cNum).gameObject;
     }
 
-    public GameObject GetCOC(string parentName, int cNumA, int cNumB) { // Gets the child of the initial child
+    public GameObject GetC(string parentName, int cNumA, int cNumB) { // Override method gets the child of the initial child
         GameObject firstChild = GetC(parentName, cNumA);
         return firstChild.transform.GetChild(cNumB).gameObject;
     }

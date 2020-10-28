@@ -4,9 +4,9 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 
 public class ShipMechanics : MonoBehaviour {
-    string[] ShipNames = new string[] { "barque", "brig", "carrack", "frigate", "full-rigged ship", "schooner", "ship of the line", "sloop of war" };
-    Ships ShipTypes = new Ships();
-    List<GameObject> PlayerShips = new List<GameObject>();
+    public string[] ShipNames = new string[] { "barque", "brig", "carrack", "frigate", "full-rigged ship", "schooner", "ship of the line", "sloop of war" };
+    public Ships ShipTypes = new Ships();
+    public List<GameObject> PlayerShips = new List<GameObject>();
     // Start is called before the first frame update
     void Start() {
         ShipTypes.SetStat(ShipNames[0], 0.2f, 1, 2 ); // Sets Barque size, speed and strength
@@ -17,7 +17,6 @@ public class ShipMechanics : MonoBehaviour {
         ShipTypes.SetStat(ShipNames[5], 0.2f, 1, 2 ); // Sets Schooner size, speed and strength
         ShipTypes.SetStat(ShipNames[6], 0.2f, 1, 2 ); // Sets Ship of the Line size, speed and strength
         ShipTypes.SetStat(ShipNames[7], 0.2f, 1, 2 ); // Sets Sloop of War size, speed and strength
-        PlayerShips.Add(ShipTypes.NewShip(ShipNames[5], transform));
     }
 
     // Update is called once per frame
