@@ -11,9 +11,6 @@ public class UIButton : MonoBehaviour {
 
     // Update is called once per frame
     public bool ButtonPressed() {
-        if (transform.name == "Button Send ship") {
-            Debug.Log(Physics2D.Raycast(Interactions.GetMousePos(), Vector2.zero).collider.name);
-        }
         if (Interactions.MouseOnObject(transform.gameObject)) {
             if (transform.gameObject.GetComponent<Renderer>().material.GetColor("_Color") != Color.white) {
                 transform.gameObject.GetComponent<Renderer>().material.SetColor("_Color", Color.white);
