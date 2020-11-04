@@ -16,15 +16,20 @@ public class InteractiveComponents : MonoBehaviour {
         mousePosOnScreen.y = (zoomAbs / -22.73010161f) * (-12.87099021f * mousePosOnScreen.y - 0.01777780835f) + (mousePosOnScreen.y / -22.73010161f);
         return screenCentreInWorld + mousePosOnScreen;
     }
-
-    public bool MouseOnObject(GameObject objChecked) {
-        Collider2D objHit = Physics2D.Raycast(GetMousePos(), Vector2.zero).collider;
-        if (objHit != null) {
-            return (objHit.name == objChecked.name);
+    public bool PosOnObject(Vector2 pos, GameObject objChecked) {
+        RaycastHit2D[] objsHit = Physics2D.RaycastAll(pos, Vector2.zero);
+        if (objsHit != null) {
+            foreach (RaycastHit2D objHit in objsHit) {
+                if (objHit.collider.name == objChecked.name) {
+                    return true;
+                }
+            }
         }
         return false;
     }
-
+    public bool MouseOnObject(GameObject objChecked) {
+        return PosOnObject(GetMousePos(), objChecked);
+    }
     public GameObject GetC(string parentName, int cNum) { // Gets from immediate child of gameobject with name parentName
         GameObject allChildren = GameObject.Find(parentName);
         return allChildren.transform.GetChild(cNum).gameObject;

@@ -32,12 +32,14 @@ public class UIScreenController : MonoBehaviour {
         }
     }
     public GameObject NewButton(string text, string action, Vector2 position) {
-        GameObject Button = Instantiate(transform.GetChild(1).GetChild(1).gameObject);
+        Transform PrimaryButton = transform.GetChild(1).GetChild(1);
+        GameObject Button = Instantiate(PrimaryButton.gameObject);
         Button.SetActive(true);
         Button.transform.parent = transform.GetChild(1);
         Button.transform.name = string.Format("Button {0}", text);
         Button.transform.GetChild(0).GetComponent<Text>().text = text;
-        Button.transform.position = position;
+        Button.transform.position = PrimaryButton.position + new Vector3(position.x, position.y, 0);
+        Button.transform.localScale = PrimaryButton.localScale;
         Button.AddComponent<UIButton>();
         Button.GetComponent<UIButton>().Action = action;
         Button.GetComponent<UIButton>().Reference = text;

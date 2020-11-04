@@ -13,7 +13,7 @@ public class UserInterfaceController : MonoBehaviour {
         UIScreen = gameObject.GetComponentInChildren<UIScreenController>();
         List<GameObject> FirstButtons = new List<GameObject>();
         for (int i = 0; i < GameObject.Find("Major").transform.childCount; i++) {
-            FirstButtons.Add(UIScreen.NewButton(Interactions.GetC("Major", i).name, "SetInitialPort", new Vector2(0, 2 - i))); // Creates list of buttons (major ports) that the player can start at
+            FirstButtons.Add(UIScreen.NewButton(Interactions.GetC("Major", i).name, "SetInitialPort", new Vector2(0, -i))); // Creates list of buttons (major ports) that the player can start at
         }
         CreateScreen("StartCity", "Choose a port to start in", false, FirstButtons); // Creates first screen where the starting port is chosen
     }
