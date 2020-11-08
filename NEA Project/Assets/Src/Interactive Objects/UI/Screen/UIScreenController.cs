@@ -20,13 +20,14 @@ public class UIScreenController : MonoBehaviour {
         foreach (GameObject button in Buttons) {
             UIButton buttonScript = button.GetComponent<UIButton>();
             if (buttonScript.ButtonPressed()) {
+                ShipMechanics ShipMechs = GameObject.Find("Ship").GetComponent<ShipMechanics>();
                 GameObject.Find("UI Screen").SetActive(false);
                 if (buttonScript.Action == "SetInitialPort") {
-                    ShipMechanics ShipMechs = GameObject.Find("Ship").GetComponent<ShipMechanics>();
                     ShipMechs.PlayerShips.Add(ShipMechs.ShipTypes.NewShip(ShipMechs.ShipNames[5], GameObject.Find("Ship").transform));
-                    ShipMechs.PlayerShips[0].transform.position = GameObject.Find(buttonScript.Reference).transform.position;
+                    ShipMechs.PlayerShips[0].GetComponent<ShipInfo>().TargetPort = buttonScript.Reference;
+                    ShipMechs.PlayerShips[0].GetComponent<ShipInfo>().Dock();
                 } else if (buttonScript.Action == "SetPort") {
-                    GameObject.Find("Ship").GetComponent<ShipMechanics>().PlayerShips[0].transform.position = GameObject.Find(buttonScript.Reference).transform.position;
+                    ShipMechs.PlayerShips[0].GetComponent<ShipInfo>().TargetPort = buttonScript.Reference;
                 }
             }
         }

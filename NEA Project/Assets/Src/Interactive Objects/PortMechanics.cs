@@ -20,7 +20,9 @@ public class PortMechanics : MonoBehaviour {
                         }
                         if (Input.GetMouseButtonDown(0)) { // Creates UI screen for port when clicked on
                             List<GameObject> PortButtons = new List<GameObject>();
-                            PortButtons.Add(Interactions.GetC("User Interface", 1).GetComponent<UIScreenController>().NewButton("Send ship", "SetPort", PortObject.name, new Vector2()));
+                            if (GameObject.Find("Ship").GetComponent<ShipMechanics>().PlayerShips[0].GetComponent<ShipInfo>().Docked()) {
+                                PortButtons.Add(Interactions.GetC("User Interface", 1).GetComponent<UIScreenController>().NewButton("Send ship", "SetPort", PortObject.name, new Vector2()));
+                            }
                             GameObject.Find("User Interface").GetComponent<UserInterfaceController>().CreateScreen("Market", PortObject.name, true, PortButtons);
                         }
                     }

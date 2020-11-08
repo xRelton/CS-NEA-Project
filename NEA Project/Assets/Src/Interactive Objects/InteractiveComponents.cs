@@ -2,8 +2,10 @@
 using UnityEngine;
 
 public class InteractiveComponents : MonoBehaviour {
+    public float TimeDilation;
     public Color MyGrey;
     public void Start() {
+        TimeDilation = Time.deltaTime;
         MyGrey = new Color(0.7f, 0.7f, 0.7f);
     }
     public Vector2 GetMousePos() {
@@ -38,5 +40,8 @@ public class InteractiveComponents : MonoBehaviour {
     public GameObject GetC(string parentName, int cNumA, int cNumB) { // Override method gets the child of the initial child
         GameObject firstChild = GetC(parentName, cNumA);
         return firstChild.transform.GetChild(cNumB).gameObject;
+    }
+    public bool InVectDomain(Vector2 vect1, Vector2 vect2, float domain) {
+        return (vect1.x < vect2.x + domain && vect1.x > vect2.x - domain && vect1.y < vect2.y + domain && vect1.y > vect2.y - domain) ;
     }
 }

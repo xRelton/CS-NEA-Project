@@ -1,12 +1,16 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor.Experimental.GraphView;
 
 public class ShipMechanics : MonoBehaviour {
-    public string[] ShipNames = new string[] { "barque", "brig", "carrack", "frigate", "full-rigged ship", "schooner", "ship of the line", "sloop of war" };
-    public Ships ShipTypes = new Ships();
-    public List<GameObject> PlayerShips = new List<GameObject>();
     InteractiveComponents Interactions;
+    public string[] ShipNames = new string[] { "barque", "brig", "carrack", "frigate", "full-rigged ship", "schooner", "ship of the line", "sloop of war" };
+    public ShipType ShipTypes = new ShipType();
+    public List<GameObject> PlayerShips = new List<GameObject>();
+    static int NumDirs = 5;
+    List<Vector3> TestDirections = new List<Vector3>();
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
@@ -17,21 +21,78 @@ public class ShipMechanics : MonoBehaviour {
         ShipTypes.SetStat(ShipNames[4], 0.2f, 1, 2 ); // Sets Full-rigged Ship size, speed and strength
         ShipTypes.SetStat(ShipNames[5], 0.2f, 1, 2 ); // Sets Schooner size, speed and strength
         ShipTypes.SetStat(ShipNames[6], 0.2f, 1, 2 ); // Sets Ship of the Line size, speed and strength
-        ShipTypes.SetStat(ShipNames[7], 0.2f, 1, 2 ); // Sets Sloop of War size, speed and strength
+        ShipTypes.SetStat(ShipNames[7], 0.2f, 1, 2); // Sets Sloop of War size, speed and strength
+        for (int i = -NumDirs; i <= NumDirs; i++) {
+            for (int j = -NumDirs; j <= NumDirs; j++) {
+                if (i != 0 && j != 0) {
+                    TestDirections.Add(new Vector3(i, j));
+                }
+            }
+        }
     }
 
     // Update is called once per frame
     void Update() {
         foreach (GameObject PlayerShip in PlayerShips) {
-            Debug.Log(Interactions.PosOnObject(PlayerShip.transform.position, GameObject.Find("Sea Collider")));
-            //colliderImage.GetPixel(PlayerShip.transform.position.x, PlayerShip.transform.position.y);
+            ShipInfo PlayerShipInfo = PlayerShip.GetComponent<ShipInfo>();
+            if (!PlayerShipInfo.Docked()) {
+                if (PlayerShipInfo.OnSea(PlayerShipInfo.PerfectMove() * Time.deltaTime)) {
+                    PlayerShip.transform.position += PlayerShipInfo.PerfectMove() * Interactions.TimeDilation;
+                } else {
+                    Vector3 BestDirection = new Vector3();
+                    float BestWeight = -1;
+                    foreach (Vector3 Direction in TestDirections) {
+                        if (PlayerShipInfo.OnSea(Direction * Interactions.TimeDilation) && PlayerShipInfo.GetWeight(Direction) > BestWeight && !PlayerShipInfo.illegalDirections.Contains(Direction)) {
+                            BestDirection = Direction;
+                            BestWeight = PlayerShipInfo.GetWeight(Direction);
+                        }
+                    }
+                    // Make it so directions are made illegal when they go back and forth without moving (use periodic loop to check if the current position is in the same area as the previous one then track
+                    // directions made during that period and ban them until out of the area range plus a little bit)
+                    //PlayerShipInfo.illegalDirections.Remove(PlayerShipInfo.illegalDirections[0]);
+                    //PlayerShipInfo.illegalDirections.Add(BestDirection);
+                    PlayerShip.transform.position += BestDirection * Interactions.TimeDilation;
+                }
+                if (Interactions.InVectDomain(PlayerShip.transform.position, PlayerShipInfo.GetPort().transform.position, 0.1f)) {
+                    PlayerShipInfo.Dock();
+                }
+            }
         }
     }
 }
-
-public class Ships {
+public class ShipInfo : MonoBehaviour {
+    string previousPort; // Set to the last port the ship docked at
+    string targetPort; // Set to the port being headed to if the ship is travelling
+    public List<Vector3> illegalDirections = new List<Vector3>();
+    public ShipInfo() {}
+    public string TargetPort {
+        set { targetPort = value; }
+    }
+    public GameObject GetPort() {
+        return GameObject.Find(targetPort);
+    }
+    public void Dock() {
+        previousPort = targetPort;
+        transform.position = GetPort().transform.position;
+    }
+    public bool Docked() {
+        return previousPort == targetPort;
+    }
+    public bool OnSea(Vector3 posChange) {
+        return transform.GetComponentInParent<InteractiveComponents>().PosOnObject(transform.position + posChange, GameObject.Find("Sea Collider"));
+    }
+    public Vector3 PerfectMove() {
+        float xChange = (GetPort().transform.position.x - GameObject.Find(previousPort).transform.position.x) / 3; // (+/-) depends on direction of ship, adjusted to make vertical and horizontal journeys similar speeds
+        float yChange = xChange * (GetPort().transform.position.y - transform.position.y) / (GetPort().transform.position.x - transform.position.x); // Gradient value
+        return new Vector3(xChange, yChange);
+    }
+    public float GetWeight(Vector3 posChange) {
+        return posChange.y / PerfectMove().y;
+    }
+}
+public class ShipType {
     Dictionary<string, float[]> ShipStats = new Dictionary<string, float[]>();
-    public Ships() {}
+    public ShipType() {}
     public void SetStat(string name, float size, float speed, float strength) {
         ShipStats.Add(name, new float[] { size, speed, strength });
     }
@@ -49,6 +110,7 @@ public class Ships {
         NewShip.GetComponent<SpriteRenderer>().sortingLayerName = "Default";
         NewShip.GetComponent<SpriteRenderer>().sortingOrder = 1;
         NewShip.AddComponent<BoxCollider2D>();
+        NewShip.AddComponent<ShipInfo>();
         NewShip.transform.localScale = new Vector2(ShipStats[name][0], ShipStats[name][0]);
         return NewShip;
     }
