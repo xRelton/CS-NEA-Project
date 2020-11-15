@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 public class InteractiveComponents : MonoBehaviour {
     public float TimeDilation;
     public Color MyGrey;
-    public void Start() {
+    void Start() {
         TimeDilation = Time.deltaTime;
         MyGrey = new Color(0.7f, 0.7f, 0.7f);
     }
@@ -29,6 +31,12 @@ public class InteractiveComponents : MonoBehaviour {
         }
         return false;
     }
+    public bool OnLand(Vector3 pos) {
+        return PosOnObject(pos, GameObject.Find("Sea Collider"));
+    }
+    public Vector3 PerfectMove(Vector2 start, Vector2 target) {
+        return (target - start) / Vector2.Distance(start, target);
+    }
     public bool MouseOnObject(GameObject objChecked) {
         return PosOnObject(GetMousePos(), objChecked);
     }
@@ -43,5 +51,14 @@ public class InteractiveComponents : MonoBehaviour {
     }
     public bool InVectDomain(Vector2 vect1, Vector2 vect2, float domain) {
         return (vect1.x < vect2.x + domain && vect1.x > vect2.x - domain && vect1.y < vect2.y + domain && vect1.y > vect2.y - domain) ;
+    }
+    public Vector2 ClosestVector(List<Vector2> vects, Vector2 goal) {
+        Vector2 ClosestVect = vects[0];
+        for (int i = 1; i < vects.Count; i++) {
+            if (Vector2.Distance(vects[i], goal) < Vector2.Distance(ClosestVect, goal)) {
+                ClosestVect = vects[i];
+            }
+        }
+        return ClosestVect;
     }
 }

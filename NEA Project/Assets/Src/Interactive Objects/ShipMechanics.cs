@@ -11,6 +11,7 @@ public class ShipMechanics : MonoBehaviour {
     public string[] ShipNames = new string[] { "barque", "brig", "carrack", "frigate", "full-rigged ship", "schooner", "ship of the line", "sloop of war" };
     public ShipType ShipTypes = new ShipType();
     public List<GameObject> PlayerShips = new List<GameObject>();
+    List<Vector2> Nodes = new List<Vector2>();
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
@@ -23,6 +24,14 @@ public class ShipMechanics : MonoBehaviour {
         ShipTypes.SetStat(ShipNames[5], 0.2f, 1, 2); // Sets Schooner size, speed and strength
         ShipTypes.SetStat(ShipNames[6], 0.2f, 1, 2); // Sets Ship of the Line size, speed and strength
         ShipTypes.SetStat(ShipNames[7], 0.2f, 1, 2); // Sets Sloop of War size, speed and strength
+        for (float i = -13; i < 13; i++) {
+            for (float j = -7; j < 7; j++) {
+                Vector2 NewNode = new Vector2(i, j);
+                if (!Interactions.OnLand(NewNode)) {
+                    Nodes.Add(NewNode);
+                }
+            }
+        }
     }
 
     // Update is called once per frame
@@ -31,176 +40,144 @@ public class ShipMechanics : MonoBehaviour {
             ShipInfo PlayerShipInfo = PlayerShip.GetComponent<ShipInfo>();
             if (!PlayerShipInfo.Docked()) {
                 if (PlayerShipInfo.Route.Any()) {
-                    PlayerShip.transform.position += PlayerShipInfo.PerfectMove(PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 1], PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 2]) * Interactions.TimeDilation;
+                    PlayerShip.transform.position += Interactions.PerfectMove(PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 1], PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 2]) * Interactions.TimeDilation;
                     if (Interactions.InVectDomain(PlayerShip.transform.position, PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 2], 0.1f)) {
                         PlayerShipInfo.Route.Remove(PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 1]);
                     }
                 } else {
                     SetShipRoute(PlayerShip.transform.position, PlayerShipInfo);
                 }
-                if (Interactions.InVectDomain(PlayerShip.transform.position, PlayerShipInfo.GetTargetPortPos(), 0.1f)) {
+                if (Interactions.InVectDomain(PlayerShip.transform.position, PlayerShipInfo.GetPortPos(true), 0.1f)) {
                     PlayerShipInfo.Dock();
                     PlayerShipInfo.Route.Clear();
                 }
             }
         }
     }
-    void SetShipRoute(Vector3 shipPosition, ShipInfo shipInfo) {
-        List<Point> Points = new List<Point>();
-        Points.Add(new Point(shipPosition, 0, -1));
-        Points.Add(new Point(shipInfo.GetPreviousPortSeaPos(), 1, 0));
-        if (!Interactions.InVectDomain(shipInfo.NextLines(shipInfo.GetPreviousPortSeaPos(), false)[0], shipInfo.GetTargetPortPos(), 0.1f)) {
-            Points = GetIndirectRoute(Points, shipInfo);
+    void DrawNode(Vector2 node, int color) {
+        Color[] Colors = new Color[] { Color.white, Color.red, Color.magenta, Color.blue, Color.cyan, Color.green, Color.yellow, Color.gray, Color.black };
+        Color setColor;
+        if (color > Colors.Length - 1) {
+            setColor = Colors[Colors.Length - 1];
         } else {
-            Points.Add(new Point(shipInfo.GetTargetPortPos(), 2, 1));
+            setColor = Colors[color];
         }
-        shipInfo.Route = BurrowForRoute(Points);
+        Debug.DrawLine(node - new Vector2(0.1f, 0), node + new Vector2(0.1f, 0), setColor, 10);
+        Debug.DrawLine(node - new Vector2(0, 0.1f), node + new Vector2(0, 0.1f), setColor, 10);
     }
-    List<Point> GetIndirectRoute(List<Point> points, ShipInfo shipInfo) {
-        int Generation = 2;
-        while (true) {
-            int PrePointCount = points.Count;
-            for (int i = 1; i < PrePointCount; i++) {
-                if (points[i].Generation == Generation) {
-                    foreach (Vector3 lineEnd in shipInfo.NextLines(points[i].Position)) {
-                        if (Interactions.InVectDomain(lineEnd, shipInfo.GetTargetPortPos(), 0.1f)) {
-                            points.Add(new Point(lineEnd, Generation, i));;
-                            return points;
-                        } else {
-                            foreach (Vector3 newPoint in shipInfo.NextPoints(points[i].Position, lineEnd)) {
-                                points.Add(new Point(newPoint, Generation, i));
-                                points[points.Count - 1].SetPosition(points);
-                            }
+    void SetShipRoute(Vector3 shipPosition, ShipInfo shipInfo) {
+        shipInfo.Route.Add(shipInfo.GetPortPos(true));
+        shipInfo.Route.Add(shipInfo.GetPortSeaPos(true));
+        //shipInfo.Route.AddRange(BurrowForRoute(shipInfo));
+        shipInfo.Route.Add(shipInfo.GetPortSeaPos(false));
+        shipInfo.Route.Add(shipPosition);
+        for (int i = 0; i < shipInfo.Route.Count - 1; i++) {
+            Debug.DrawLine(shipInfo.Route[i], shipInfo.Route[i + 1], Color.green, 100);
+        }
+    }
+    List<Vector2> BurrowForRoute(ShipInfo shipInfo) {
+        Dictionary<Vector2, int> NodeGroups = GetNodeGroups(shipInfo.Route[1]);
+        List<Vector2> NodesHit = new List<Vector2>(); // Nodes from the lowest numbered group that have line of sight with starting port
+        int CurrentGroup = -1;
+        bool FinalRound = false;
+        for (int i = 0; i < 10; i++) { // Loop until any number of nodes from a node group is hit
+            CurrentGroup++;
+            foreach (Vector2 node in Nodes) {
+                if (NodeGroups[node] == CurrentGroup && TargetHitBeforeLand(shipInfo.GetPortSeaPos(false), node)) {
+                    NodesHit.Add(node); // Adds all nodes in current group that hit
+                    FinalRound = true;
+                }
+            }
+            if (FinalRound == true) {
+                break;
+            }
+        }
+        List<Vector2> NodesInRoute = new List<Vector2>() { Interactions.ClosestVector(NodesHit, shipInfo.GetPortSeaPos(false)) };
+        for (int i = CurrentGroup; i > 0; i--) {
+            NodesHit.Clear();
+            foreach (Vector2 node in Nodes) {
+                if (NodeGroups[node] == i && TargetHitBeforeLand(NodesInRoute[NodesInRoute.Count - 1], node)) {
+                    NodesHit.Add(node); // Adds all nodes in current group that hit
+                }
+            }
+            NodesInRoute.Add(Interactions.ClosestVector(NodesHit, NodesInRoute[NodesInRoute.Count - 1]));
+        }
+        NodesInRoute.Reverse();
+        return NodesInRoute;
+    }
+    Dictionary<Vector2, int> GetNodeGroups(Vector2 centrePos) {
+        Dictionary<Vector2, int> NodeGroups = new Dictionary<Vector2, int>() { { centrePos, 0 } };
+        List<Vector2> UnassignedNodes = Nodes;
+        List<Vector2> PreviousNodes = new List<Vector2>() { centrePos };
+        DrawNode(centrePos, 0);
+        for (int GroupNum = 1; GroupNum < 10; GroupNum++) { // Loop runs while there are still unassigned nodes left
+            List<Vector2> NewNodes = new List<Vector2>();
+            foreach (Vector2 node in UnassignedNodes.ToList()) {
+                foreach (Vector2 previousNode in PreviousNodes) {
+                    if (TargetHitBeforeLand(node, previousNode)) {
+                        DrawNode(node, GroupNum); // Debug draw ---------------------------------------------------------------------------------
+                        NodeGroups.Add(node, GroupNum);
+                        NewNodes.Add(node);
+                        UnassignedNodes.Remove(node);
+                        foreach (Vector2 uNode in UnassignedNodes) {
+                            DrawNode(uNode, 0);
                         }
+                        break;
                     }
                 }
             }
-            Generation++;
+            PreviousNodes = NewNodes;
         }
+        return NodeGroups;
     }
-    List<Vector3> BurrowForRoute(List<Point> points) {
-        List<Point> PointRoute = new List<Point>();
-        PointRoute.Add(points[points.Count - 1]);
-        for (int i = 1; i <= PointRoute[0].Generation; i++) {
-            PointRoute.Add(points[PointRoute[i - 1].Parent]);
+    bool TargetHitBeforeLand(Vector2 start, Vector2 target) { // Checks if the straight line between the start and target point is obstructed
+        float DistToTarget = Math.Abs(Vector2.Distance(start, target));
+        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, Interactions.PerfectMove(start, target), DistToTarget); // TODO: Ensure that gradient is picked based on port to port movement
+        foreach (RaycastHit2D hit in hits) {
+            if (hit.distance < DistToTarget && hit.collider.name == "Sea Collider") {
+                return false;
+            }
         }
-        List<Vector3> VectRoute = new List<Vector3>();
-        foreach (Point point in PointRoute) {
-            VectRoute.Add(point.Move);
-        }
-        return VectRoute;
+        return true;
     }
 }
 public class ShipInfo : MonoBehaviour {
     InteractiveComponents interactions;
     string previousPort; // Name of last port the ship docked at
     string targetPort; // Name of port being headed to if the ship is travelling
-    List<Vector3> route = new List<Vector3>(); // List of points the ship must travel between to reach targetPort
+    List<Vector2> route = new List<Vector2>(); // List of points the ship must travel between to reach targetPort
     public InteractiveComponents Interactions { set { interactions = value; } }
     public string TargetPort { set { targetPort = value; } }
-    public List<Vector3> Route { set { route = value; } get { return route; } }
-    public Vector3 GetTargetPortPos() {
-        return GameObject.Find(targetPort).transform.position;
+    public List<Vector2> Route { set { route = value; } get { return route; } }
+    string WhichPort(bool portIsTarget) {
+        if (portIsTarget) {
+            return targetPort;
+        } else {
+            return previousPort;
+        }
+    }
+    public Vector3 GetPortPos(bool portIsTarget) {
+        return GameObject.Find(WhichPort(portIsTarget)).transform.position;
+    }
+    public Vector2 GetPortSeaPos(bool portIsTarget) {
+        Vector2 PortPos = GameObject.Find(WhichPort(portIsTarget)).transform.position;
+        List<Vector2> SurroundingArea = new List<Vector2>();
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                Vector2 SeaPos = PortPos + new Vector2(i, j)/3.3f;
+                if (!interactions.OnLand(SeaPos)) {
+                    SurroundingArea.Add(SeaPos);
+                }
+            }
+        }
+        return interactions.ClosestVector(SurroundingArea, GetPortPos(!portIsTarget)); ;
     }
     public void Dock() {
         previousPort = targetPort;
-        transform.position = GetTargetPortPos();
+        transform.position = GetPortPos(true);
     }
     public bool Docked() {
         return previousPort == targetPort;
-    }
-    public bool OnLand(Vector3 posChange) {
-        return interactions.PosOnObject(transform.position + posChange, GameObject.Find("Sea Collider"));
-    }
-    float GradShipToPoint(Vector3 target) {
-        return (target.y - transform.position.y) / (target.x - transform.position.x); // Gradient value
-    }
-    public Vector3 PerfectMove(Vector3 start, Vector3 target) {
-        float xChange = (target.x - start.x) / 3; // (+/-) depends on direction of ship, adjusted to make vertical and horizontal journeys similar speeds
-        float yChange = xChange * GradShipToPoint(target);
-        return new Vector3(xChange, yChange);
-    }
-    Vector3 GetReciprocal(Vector3 lineEnd, bool reverse) {
-        Vector3 Reciprocal = new Vector3(lineEnd.x, -(float)Math.Pow(lineEnd.x,2) / lineEnd.y);
-        if (reverse) {
-            return -Reciprocal;
-        }
-        return Reciprocal;
-    }
-    public Vector3 GetPreviousPortSeaPos() {
-        Vector3 PreviousPortPos = GameObject.Find(previousPort).transform.position;
-        /*Vector3 TargetPortPos = GetTargetPortPos();
-        int xDistance = (int)Math.Floor(TargetPortPos.x - PreviousPortPos.x);
-        if (xDistance > 0) {
-            for (float x = 0; x < xDistance; x += 0.02f) {
-                Vector3 SeaTest = new Vector3(x, x * GradShipToPoint(GetTargetPortPos()));
-                if (!OnLand(SeaTest)) { // If PerfectMove() is obstructed
-                    return SeaTest;
-                }
-            }
-        } else {
-            for (float x = 0; x > xDistance; x -= 0.02f) {
-                Vector3 SeaTest = new Vector3(x, x * GradShipToPoint(GetTargetPortPos()));
-                if (!OnLand(SeaTest)) { // If PerfectMove() is obstructed
-                    return SeaTest;
-                }
-            }
-        }
-        int yDistance = (int)Math.Floor(TargetPortPos.y - PreviousPortPos.y);
-        return new Vector3(PreviousPortPos.x + 0.1f * xDistance / Math.Abs(xDistance), PreviousPortPos.y + 0.1f * yDistance / Math.Abs(yDistance));*/
-        List<Vector3> SeaSides = new List<Vector3>();
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                Vector3 SeaPos = new Vector3(i, j);
-                if (!OnLand(SeaPos)){
-                    SeaSides.Add(PreviousPortPos + SeaPos);
-                }
-            }
-        }
-        float SmallestDistance = -1;
-        Vector3 ClosestSide = PreviousPortPos;
-        foreach (Vector3 side in SeaSides) {
-            if (SmallestDistance == -1 || side.magnitude - GetTargetPortPos().magnitude < SmallestDistance) {
-                SmallestDistance = side.magnitude - GetTargetPortPos().magnitude;
-                ClosestSide = side;
-            }
-        }
-        return ClosestSide;
-    }
-    Vector3 LineLandIntersect(Vector2 start, Vector2 move) { // Checks if the straight line between the start and point moved to is obstructed
-        float SmallestDistance = Math.Abs(start.magnitude - move.magnitude);
-        Vector3 ClosestPoint = move;
-        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, PerfectMove(start, start + move), SmallestDistance); // TODO: Ensure that gradient is picked based on port to port movement
-        foreach (RaycastHit2D hit in hits) {
-            if (hit.distance < SmallestDistance) {
-                Debug.Log(string.Format("{0} collision happens in port: {1}", hit.collider.name, interactions.InVectDomain(hit.point, GameObject.Find(previousPort).transform.position, 0.01f)));
-                if (hit.collider.name == targetPort) {
-                    SmallestDistance = hit.distance;
-                    ClosestPoint = move;
-                    Debug.Log(move == start - hit.point);
-                } else if (hit.collider.name == "Sea Collider" && !interactions.InVectDomain(hit.point, GameObject.Find(previousPort).transform.position, 0.01f)) {
-                    SmallestDistance = hit.distance;
-                    ClosestPoint = start - hit.point;
-                }
-            }
-        }
-        return ClosestPoint;
-    }
-    public Vector3[] NextLines(Vector3 point, bool perpendicular = true) {
-        Vector3 DistToLand = LineLandIntersect(point, GetTargetPortPos());
-        if (perpendicular && interactions.InVectDomain(DistToLand, GetTargetPortPos(), 0.1f)) {
-            return new Vector3[] { GetReciprocal(DistToLand, false), GetReciprocal(DistToLand, true) }; // For each POINT: fractal into 2 perpendicular LINES from point
-        } else {
-            return new Vector3[] { DistToLand }; // Set LINE to final point if there is no obstruction || set LINE to obstruction point if on the first generation
-        }
-    }
-    public Vector2[] NextPoints(Vector2 point, Vector2 direction) { // For each LINE: split into 3 equidescent points between start point and obstruction point
-        Vector2 DistToLand = LineLandIntersect(point, direction);
-        Vector2[] EquiPoints = new Vector2[3];
-        EquiPoints[0] = DistToLand * (1 / 4);
-        EquiPoints[1] = DistToLand * (1 / 2);
-        EquiPoints[2] = DistToLand * (3 / 4);
-        return EquiPoints;
     }
 }
 public class ShipType {
@@ -229,24 +206,4 @@ public class ShipType {
         NewShip.transform.localScale = new Vector2(ShipStats[name][0], ShipStats[name][0]);
         return NewShip;
     }
-}
-
-public class Point {
-    Vector3 move;
-    Vector3 position;
-    int generation;
-    int parent;
-    public Point(Vector3 move, int generation, int parent) {
-        this.move = move;
-        this.position = move;
-        this.generation = generation;
-        this.parent = parent;
-    }
-    public void SetPosition(List<Point> Points) {
-        position = Points[parent].position + move;
-    }
-    public Vector3 Move { get { return move; } }
-    public Vector3 Position { get { return position; } }
-    public int Generation { get { return generation; } }
-    public int Parent { get { return parent; } }
 }
