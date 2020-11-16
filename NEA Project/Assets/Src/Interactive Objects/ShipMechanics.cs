@@ -132,9 +132,9 @@ public class ShipMechanics : MonoBehaviour {
     }
     bool TargetHitBeforeLand(Vector2 start, Vector2 target) { // Checks if the straight line between the start and target point is obstructed
         float DistToTarget = Math.Abs(Vector2.Distance(start, target));
-        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, Interactions.PerfectMove(start, target), DistToTarget); // TODO: Ensure that gradient is picked based on port to port movement
+        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, Interactions.PerfectMove(start, target), DistToTarget + 1); // Ensure this line is correct (check RayCast all info)
         foreach (RaycastHit2D hit in hits) {
-            if (hit.distance < DistToTarget && hit.collider.name == "Sea Collider") {
+            if (hit.distance < DistToTarget - 0.1f && hit.collider.name == "Land Collider") { // Rename Sea Collider to land collider -- this will be the correct name
                 return false;
             }
         }
