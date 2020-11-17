@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 
 public class InteractiveComponents : MonoBehaviour {
     public float TimeDilation;
     public Color MyGrey;
+    public string[] LandColliders;
     void Start() {
         TimeDilation = Time.deltaTime;
         MyGrey = new Color(0.7f, 0.7f, 0.7f);
+        LandColliders = new string[] { "continents", "west islands", "italy", "greece", "east islands" };
     }
     public Vector2 GetMousePos() {
         float zoomAbs = Math.Abs(Camera.main.transform.position.z);
@@ -32,7 +33,11 @@ public class InteractiveComponents : MonoBehaviour {
         return false;
     }
     public bool OnLand(Vector3 pos) {
-        return PosOnObject(pos, GameObject.Find("Sea Collider"));
+        bool ReturnVal = false;
+        foreach (string collider in LandColliders) {
+            ReturnVal |= PosOnObject(pos, GameObject.Find(collider));
+        }
+        return ReturnVal;
     }
     public Vector3 PerfectMove(Vector2 start, Vector2 target) {
         return (target - start) / Vector2.Distance(start, target);
@@ -54,7 +59,7 @@ public class InteractiveComponents : MonoBehaviour {
     }
     public Vector2 ClosestVector(List<Vector2> vects, Vector2 goal) {
         Vector2 ClosestVect = vects[0];
-        for (int i = 1; i < vects.Count; i++) {
+        for (int i = 1; i < vects.Count - 1; i++) {
             if (Vector2.Distance(vects[i], goal) < Vector2.Distance(ClosestVect, goal)) {
                 ClosestVect = vects[i];
             }

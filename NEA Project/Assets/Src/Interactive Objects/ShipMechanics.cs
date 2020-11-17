@@ -24,9 +24,9 @@ public class ShipMechanics : MonoBehaviour {
         ShipTypes.SetStat(ShipNames[5], 0.2f, 1, 2); // Sets Schooner size, speed and strength
         ShipTypes.SetStat(ShipNames[6], 0.2f, 1, 2); // Sets Ship of the Line size, speed and strength
         ShipTypes.SetStat(ShipNames[7], 0.2f, 1, 2); // Sets Sloop of War size, speed and strength
-        for (float i = -13; i < 13; i++) {
-            for (float j = -7; j < 7; j++) {
-                Vector2 NewNode = new Vector2(i, j);
+        for (float x = -8; x <= 10; x+=0.5f) {
+            for (float y = -2; y <= 3; y+=0.5f) {
+                Vector2 NewNode = new Vector2(x, y);
                 if (!Interactions.OnLand(NewNode)) {
                     Nodes.Add(NewNode);
                 }
@@ -40,14 +40,16 @@ public class ShipMechanics : MonoBehaviour {
             ShipInfo PlayerShipInfo = PlayerShip.GetComponent<ShipInfo>();
             if (!PlayerShipInfo.Docked()) {
                 if (PlayerShipInfo.Route.Any()) {
-                    PlayerShip.transform.position += Interactions.PerfectMove(PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 1], PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 2]) * Interactions.TimeDilation;
-                    if (Interactions.InVectDomain(PlayerShip.transform.position, PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 2], 0.1f)) {
+                    // If the new position is not on land
+                    PlayerShip.transform.position += ShipTypes.GetSpeed(PlayerShip.name)/10 * Interactions.TimeDilation * Interactions.PerfectMove(PlayerShip.transform.position, PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 1]);
+                    // Else navigate around land until new position not land
+                    if (Interactions.InVectDomain(PlayerShip.transform.position, PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 1], 0.01f)) {
                         PlayerShipInfo.Route.Remove(PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 1]);
                     }
                 } else {
                     SetShipRoute(PlayerShip.transform.position, PlayerShipInfo);
                 }
-                if (Interactions.InVectDomain(PlayerShip.transform.position, PlayerShipInfo.GetPortPos(true), 0.1f)) {
+                if (Interactions.InVectDomain(PlayerShip.transform.position, PlayerShipInfo.GetPortPos(true), 0.01f)) {
                     PlayerShipInfo.Dock();
                     PlayerShipInfo.Route.Clear();
                 }
@@ -62,79 +64,80 @@ public class ShipMechanics : MonoBehaviour {
         } else {
             setColor = Colors[color];
         }
-        Debug.DrawLine(node - new Vector2(0.1f, 0), node + new Vector2(0.1f, 0), setColor, 10);
-        Debug.DrawLine(node - new Vector2(0, 0.1f), node + new Vector2(0, 0.1f), setColor, 10);
+        Debug.DrawLine(node - new Vector2(0.1f, 0), node + new Vector2(0.1f, 0), setColor, 15);
+        Debug.DrawLine(node - new Vector2(0, 0.1f), node + new Vector2(0, 0.1f), setColor, 15);
     }
     void SetShipRoute(Vector3 shipPosition, ShipInfo shipInfo) {
         shipInfo.Route.Add(shipInfo.GetPortPos(true));
         shipInfo.Route.Add(shipInfo.GetPortSeaPos(true));
-        //shipInfo.Route.AddRange(BurrowForRoute(shipInfo));
-        shipInfo.Route.Add(shipInfo.GetPortSeaPos(false));
-        shipInfo.Route.Add(shipPosition);
-        for (int i = 0; i < shipInfo.Route.Count - 1; i++) {
-            Debug.DrawLine(shipInfo.Route[i], shipInfo.Route[i + 1], Color.green, 100);
+        if (!TargetHitBeforeLand(shipInfo.GetPortSeaPos(false), shipInfo.GetPortSeaPos(true))) {
+            shipInfo.Route.AddRange(BurrowForRoute(shipInfo));
         }
+        shipInfo.Route.Add(shipInfo.GetPortSeaPos(false));
+        /*for (int i = 0; i < shipInfo.Route.Count - 1; i++) {
+            Debug.DrawLine(shipInfo.Route[i], shipInfo.Route[i + 1], Color.green, 15);
+        }*/
     }
     List<Vector2> BurrowForRoute(ShipInfo shipInfo) {
         Dictionary<Vector2, int> NodeGroups = GetNodeGroups(shipInfo.Route[1]);
-        List<Vector2> NodesHit = new List<Vector2>(); // Nodes from the lowest numbered group that have line of sight with starting port
+        List<Vector2> NodesHit = new List<Vector2>() { }; // Nodes from the lowest numbered group that have line of sight with starting port
         int CurrentGroup = -1;
-        bool FinalRound = false;
-        for (int i = 0; i < 10; i++) { // Loop until any number of nodes from a node group is hit
+        while (!NodesHit.Any()) { // Loops while no nodes from a node group are hit
             CurrentGroup++;
             foreach (Vector2 node in Nodes) {
-                if (NodeGroups[node] == CurrentGroup && TargetHitBeforeLand(shipInfo.GetPortSeaPos(false), node)) {
+                if (NodeGroups[node] == CurrentGroup && TargetHitBeforeLand(node, shipInfo.GetPortSeaPos(false))) {
                     NodesHit.Add(node); // Adds all nodes in current group that hit
-                    FinalRound = true;
                 }
             }
-            if (FinalRound == true) {
-                break;
-            }
         }
-        List<Vector2> NodesInRoute = new List<Vector2>() { Interactions.ClosestVector(NodesHit, shipInfo.GetPortSeaPos(false)) };
+        List<Vector2> NodesInRoute = new List<Vector2>();
         for (int i = CurrentGroup; i > 0; i--) {
+            NodesInRoute.Add(Interactions.ClosestVector(NodesHit, shipInfo.GetPortSeaPos(true)));
             NodesHit.Clear();
             foreach (Vector2 node in Nodes) {
                 if (NodeGroups[node] == i && TargetHitBeforeLand(NodesInRoute[NodesInRoute.Count - 1], node)) {
+                    //Debug.DrawLine(NodesInRoute[NodesInRoute.Count - 1], node, Color.yellow, 15);
                     NodesHit.Add(node); // Adds all nodes in current group that hit
                 }
             }
-            NodesInRoute.Add(Interactions.ClosestVector(NodesHit, NodesInRoute[NodesInRoute.Count - 1]));
         }
         NodesInRoute.Reverse();
         return NodesInRoute;
     }
     Dictionary<Vector2, int> GetNodeGroups(Vector2 centrePos) {
-        Dictionary<Vector2, int> NodeGroups = new Dictionary<Vector2, int>() { { centrePos, 0 } };
-        List<Vector2> UnassignedNodes = Nodes;
+        Dictionary<Vector2, int> NodeGroups = new Dictionary<Vector2, int>() { };
+        List<Vector2> UnassignedNodes = Nodes.ToList();
         List<Vector2> PreviousNodes = new List<Vector2>() { centrePos };
-        DrawNode(centrePos, 0);
-        for (int GroupNum = 1; GroupNum < 10; GroupNum++) { // Loop runs while there are still unassigned nodes left
+        int GroupNum = 1;
+        while (UnassignedNodes.Any()) { // Loop runs while there are still unassigned nodes left
             List<Vector2> NewNodes = new List<Vector2>();
             foreach (Vector2 node in UnassignedNodes.ToList()) {
                 foreach (Vector2 previousNode in PreviousNodes) {
-                    if (TargetHitBeforeLand(node, previousNode)) {
-                        DrawNode(node, GroupNum); // Debug draw ---------------------------------------------------------------------------------
+                    if (TargetHitBeforeLand(previousNode, node)) {
+                        //DrawNode(node, GroupNum - 1);
                         NodeGroups.Add(node, GroupNum);
                         NewNodes.Add(node);
                         UnassignedNodes.Remove(node);
-                        foreach (Vector2 uNode in UnassignedNodes) {
-                            DrawNode(uNode, 0);
-                        }
                         break;
                     }
                 }
             }
             PreviousNodes = NewNodes;
+            GroupNum++;
         }
         return NodeGroups;
     }
-    bool TargetHitBeforeLand(Vector2 start, Vector2 target) { // Checks if the straight line between the start and target point is obstructed
-        float DistToTarget = Math.Abs(Vector2.Distance(start, target));
-        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, Interactions.PerfectMove(start, target), DistToTarget + 1); // Ensure this line is correct (check RayCast all info)
-        foreach (RaycastHit2D hit in hits) {
-            if (hit.distance < DistToTarget - 0.1f && hit.collider.name == "Land Collider") { // Rename Sea Collider to land collider -- this will be the correct name
+    bool TargetHitBeforeLand(Vector2 start, Vector2 target) { // Checks if the straight line between the start and target point is unobstructed
+        bool ReturnVal = true;
+        RaycastHit2D[] hitsUp = Physics2D.RaycastAll(transform.position, Interactions.PerfectMove(start, target), Vector2.Distance(start, target));
+        RaycastHit2D[] hitsDown = Physics2D.RaycastAll(transform.position, Interactions.PerfectMove(target, start), Vector2.Distance(start, target));
+        foreach (RaycastHit2D hit in hitsUp) {
+            if (Interactions.LandColliders.Any(collider => collider == hit.collider.name)) {
+                ReturnVal = false;
+            }
+        }
+        foreach (RaycastHit2D hit in hitsDown) {
+            if (Interactions.LandColliders.Any(collider => collider == hit.collider.name) && ReturnVal == false) {
                 return false;
             }
         }
