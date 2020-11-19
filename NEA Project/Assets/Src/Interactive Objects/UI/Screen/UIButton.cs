@@ -1,9 +1,11 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class UIButton : MonoBehaviour {
     InteractiveComponents Interactions;
     public string Action;
-    public string Reference;
+    public string PortName;
+    public List<int> References;
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
