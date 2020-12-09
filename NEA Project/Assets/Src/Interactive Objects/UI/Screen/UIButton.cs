@@ -4,8 +4,7 @@ using UnityEngine;
 public class UIButton : MonoBehaviour {
     InteractiveComponents Interactions;
     public string Action;
-    public string PortName;
-    public List<int> References;
+    public int[] References;
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();

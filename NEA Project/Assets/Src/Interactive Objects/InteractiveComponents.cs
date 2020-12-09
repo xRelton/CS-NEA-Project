@@ -45,17 +45,8 @@ public class InteractiveComponents : MonoBehaviour {
     public bool MouseOnObject(GameObject objChecked) {
         return PosOnObject(GetMousePos(), objChecked);
     }
-    public GameObject GetC(string parentName, int cNum) { // Gets from immediate child of gameobject with name parentName
-        GameObject allChildren = GameObject.Find(parentName);
-        return allChildren.transform.GetChild(cNum).gameObject;
-    }
-
-    public GameObject GetC(string parentName, int cNumA, int cNumB) { // Override method gets the child of the initial child
-        GameObject firstChild = GetC(parentName, cNumA);
-        return firstChild.transform.GetChild(cNumB).gameObject;
-    }
     public bool InVectDomain(Vector2 vect1, Vector2 vect2, float domain) {
-        return (vect1.x < vect2.x + domain && vect1.x > vect2.x - domain && vect1.y < vect2.y + domain && vect1.y > vect2.y - domain) ;
+        return (vect1.x < vect2.x + domain && vect1.x > vect2.x - domain && vect1.y < vect2.y + domain && vect1.y > vect2.y - domain);
     }
     public Vector2 ClosestVector(List<Vector2> vects, Vector2 goal) {
         Vector2 ClosestVect = vects[0];
@@ -65,5 +56,16 @@ public class InteractiveComponents : MonoBehaviour {
             }
         }
         return ClosestVect;
+    }
+    public void DrawPoint(Vector2 node, int color) {
+        Color[] Colors = new Color[] { Color.white, Color.red, Color.magenta, Color.blue, Color.cyan, Color.green, Color.yellow, Color.gray, Color.black };
+        Color setColor;
+        if (color > Colors.Length - 1) {
+            setColor = Colors[Colors.Length - 1];
+        } else {
+            setColor = Colors[color];
+        }
+        Debug.DrawLine(node - new Vector2(0.1f, 0), node + new Vector2(0.1f, 0), setColor, 15);
+        Debug.DrawLine(node - new Vector2(0, 0.1f), node + new Vector2(0, 0.1f), setColor, 15);
     }
 }

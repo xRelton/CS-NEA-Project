@@ -4,10 +4,10 @@ using System.Linq;
 
 public class ShipMechanics : MonoBehaviour {
     InteractiveComponents Interactions;
+    List<Vector2> Nodes = new List<Vector2>();
     public string[] ShipNames = new string[] { "barque", "brig", "carrack", "frigate", "full-rigged ship", "schooner", "ship of the line", "sloop of war" };
     public ShipType ShipTypes = new ShipType();
     public List<GameObject> PlayerShips = new List<GameObject>();
-    List<Vector2> Nodes = new List<Vector2>();
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
@@ -114,7 +114,7 @@ public class ShipInfo : MonoBehaviour {
         }
         route.Add(PreviousPortSeaPos);
         for (int i = 0; i < route.Count - 1; i++) {
-            Debug.DrawLine(route[i], route[i + 1], Color.green, 15);
+            //Debug.DrawLine(route[i], route[i + 1], Color.green, 15);
         }
     }
     bool TargetHitBeforeLand(Vector2 start, Vector2 target) { // Checks if the straight line between the start and target point is unobstructed
@@ -132,17 +132,6 @@ public class ShipInfo : MonoBehaviour {
             }
         }
         return true;
-    }
-    void DrawNode(Vector2 node, int color) {
-        Color[] Colors = new Color[] { Color.white, Color.red, Color.magenta, Color.blue, Color.cyan, Color.green, Color.yellow, Color.gray, Color.black };
-        Color setColor;
-        if (color > Colors.Length - 1) {
-            setColor = Colors[Colors.Length - 1];
-        } else {
-            setColor = Colors[color];
-        }
-        Debug.DrawLine(node - new Vector2(0.1f, 0), node + new Vector2(0.1f, 0), setColor, 15);
-        Debug.DrawLine(node - new Vector2(0, 0.1f), node + new Vector2(0, 0.1f), setColor, 15);
     }
     List<Vector2> BurrowForRoute(Vector2 startPos, Vector2 targetPos, List<Vector2> nodes) {
         Dictionary<Vector2, int> NodeGroups = GetNodeGroups(Route[1], nodes);
@@ -162,7 +151,7 @@ public class ShipInfo : MonoBehaviour {
             NodesHit.Clear();
             foreach (Vector2 node in nodes) {
                 if (NodeGroups[node] == i && TargetHitBeforeLand(NodesInRoute[NodesInRoute.Count - 1], node)) {
-                    Debug.DrawLine(NodesInRoute[NodesInRoute.Count - 1], node, Color.yellow, 15);
+                    //Debug.DrawLine(NodesInRoute[NodesInRoute.Count - 1], node, Color.yellow, 15);
                     NodesHit.Add(node); // Adds all nodes in current group that hit
                 }
             }
@@ -180,7 +169,7 @@ public class ShipInfo : MonoBehaviour {
             foreach (Vector2 node in UnassignedNodes.ToList()) {
                 foreach (Vector2 previousNode in PreviousNodes) {
                     if (TargetHitBeforeLand(previousNode, node)) {
-                        DrawNode(node, GroupNum - 1);
+                        //Interactions.DrawPoint(node, GroupNum - 1);
                         NodeGroups.Add(node, GroupNum);
                         NewNodes.Add(node);
                         UnassignedNodes.Remove(node);
@@ -196,12 +185,12 @@ public class ShipInfo : MonoBehaviour {
 }
 public class ShipType {
     InteractiveComponents interactions;
-    Dictionary<string, float[]> ShipStats = new Dictionary<string, float[]>();
+    Dictionary<string, float[]> shipStats = new Dictionary<string, float[]>();
     public InteractiveComponents Interactions { set { interactions = value; } }
     public void SetStat(string name, float size, float speed, float strength) {
-        ShipStats.Add(name, new float[] { size, speed, strength });
+        shipStats.Add(name, new float[] { size, speed, strength });
     }
-    public float GetSize(string name) { return (ShipStats[name][0]); }
-    public float GetSpeed(string name) { return (ShipStats[name][1]); }
-    public float GetStrength(string name) { return (ShipStats[name][2]); }
+    public float GetSize(string name) { return (shipStats[name][0]); }
+    public float GetSpeed(string name) { return (shipStats[name][1]); }
+    public float GetStrength(string name) { return (shipStats[name][2]); }
 }

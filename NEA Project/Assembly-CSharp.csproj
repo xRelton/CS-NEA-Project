@@ -58,6 +58,7 @@
      <Compile Include="Assets\Src\Interactive Objects\UI\Screen\UIButton.cs" />
      <Compile Include="Assets\Src\Interactive Objects\PortMechanics.cs" />
      <Compile Include="Assets\Src\FlyCamera.cs" />
+     <Compile Include="Assets\Src\MarketSimulator.cs" />
      <Compile Include="Assets\Src\Interactive Objects\UI\Screen\UIScreenController.cs" />
      <Compile Include="Assets\Src\Interactive Objects\InteractiveComponents.cs" />
      <Compile Include="Assets\Src\Interactive Objects\UI\GameSpeedControl.cs" />
