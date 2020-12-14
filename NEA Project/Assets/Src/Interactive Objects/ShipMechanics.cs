@@ -74,6 +74,7 @@ public class ShipInfo : MonoBehaviour {
     string previousPort; // Name of last port the ship docked at
     string targetPort; // Name of port being headed to if the ship is travelling
     List<Vector2> route = new List<Vector2>(); // List of points the ship must travel between to reach targetPort
+    Dictionary<int, int> inventory = new Dictionary<int, int>(); // Includes item id and number of items
     public InteractiveComponents Interactions { set { interactions = value; } }
     public string Type { set; get; }
     public string Port { set { targetPort = value; } get { return previousPort; } }

@@ -54,16 +54,16 @@ public class PortMechanics : MonoBehaviour {
                                     }
                                 }
                             }
-                            List<Tuple<string, string, Vector2, int[]>> PortButtons = new List<Tuple<string, string, Vector2, int[]>>();
+                            List<ButtonUIObject> PortButtons = new List<ButtonUIObject>();
                             int yFix = 0;
                             if (ShipsAway.Count != 0) {
                                 yFix--;
-                                PortButtons.Add(new Tuple<string, string, Vector2, int[]>("Send ship", "SetPort", new Vector2(), ShipsAway.ToArray()));
+                                PortButtons.Add(new ButtonUIObject("Send ship", "ShipRequest", new Vector2(), ShipsAway.ToArray()));
                             }
                             if (ShipsHome.Count != 0) {
-                                PortButtons.Add(new Tuple<string, string, Vector2, int[]>("Open market", "OpenMarket", new Vector2(0, yFix), ShipsHome.ToArray()));
+                                PortButtons.Add(new ButtonUIObject("Open market", "ShipRequest", new Vector2(0, yFix), ShipsHome.ToArray()));
                             }
-                            List<Tuple<string, Vector2>> Title = new List<Tuple<string, Vector2>> { new Tuple<string, Vector2>(PortObject.name, new Vector2(0, 3)) };
+                            List<TextUIObject> Title = new List<TextUIObject> { new TextUIObject(PortObject.name, new Vector2(0, 3)) };
                             GameObject.Find("User Interface").GetComponent<UserInterfaceController>().CreateScreen(Title, PortButtons, true, true);
                         }
                     }
