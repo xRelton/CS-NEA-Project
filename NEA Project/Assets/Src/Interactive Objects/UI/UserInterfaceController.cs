@@ -52,22 +52,23 @@ public class UserInterfaceController : MonoBehaviour {
             TextObjects.Add(text.NewText());
         }
         foreach (ButtonUIObject button in buttons) {
-            ButtonObjects.Add(button.NewButton());
+            ButtonObjects.Add(button.NewButton(Instantiate(GameObject.Find("UI Screen Canvas").transform.GetChild(0))));
         }
         UIScreen.Texts = TextObjects;
+        UIScreen.Sliders = new List<GameObject>();
         UIScreen.Buttons = ButtonObjects;
     }
     public void CreateScreen(List<TextUIObject> texts, List<SliderUIObject> sliders, List<ButtonUIObject> buttons, bool closeButton, bool portNameIsTitle = false) { // Used to create user interface screens that are interacted with by the player
         CreateScreen(texts, buttons, closeButton, portNameIsTitle);
         List<GameObject> SliderObjects = new List<GameObject>();
         foreach (SliderUIObject slider in sliders) {
-            SliderObjects.Add(slider.NewSlider());
+            SliderObjects.Add(slider.NewSlider(Instantiate(GameObject.Find("UI Screen Canvas").transform.GetChild(1))));
         }
         UIScreen.Sliders = SliderObjects;
     }
 }
 
-public class UIObject : ScriptableObject {
+public class UIObject {
     protected UIObject(string contents, Vector2 position, Vector2 size) {
         Contents = contents;
         Position = position;
@@ -82,12 +83,13 @@ public class UIObject : ScriptableObject {
     public Vector2 Size { get; }
     protected GameObject NewObject(string type, GameObject baseObject = null) {
         GameObject Object = baseObject ?? new GameObject(string.Format("{0} {1}", type, Contents));
-        Object.transform.parent = GameObject.Find("UI Screen Canvas").transform;
-        Object.transform.position = new Vector2(Position.x, Position.y);
+        Object.transform.SetParent(GameObject.Find("UI Screen Canvas").transform);
         if (baseObject == null) {
+            Object.transform.position = new Vector2(Position.x, Position.y);
             Object.transform.localScale = new Vector2(Size.x, Size.y);
         } else {
             Object.name = string.Format("{0} {1}", type, Contents);
+            Object.transform.position += new Vector3(Position.x, Position.y, 0);
             Object.transform.localScale *= new Vector2(Size.x, Size.y);
         }
         return Object;
@@ -108,10 +110,9 @@ public class TextUIObject : UIObject {
 }
 public class SliderUIObject : UIObject {
     public SliderUIObject(string contents, Vector2 position, Vector2 size) : base(contents, position, size) { }
-    public GameObject NewSlider() { // Tuple consists of string name, Vector2 position, Vector2 size
-        GameObject slider = NewObject("Slider", Instantiate(GameObject.Find("UI Screen Canvas").transform.GetChild(1).gameObject));
+    public GameObject NewSlider(Transform sliderBase) { // Tuple consists of string name, Vector2 position, Vector2 size
+        GameObject slider = NewObject("Slider", sliderBase.gameObject);
         slider.SetActive(true);
-        slider.AddComponent<Slider>();
         return slider;
     }
 }
@@ -122,11 +123,9 @@ public class ButtonUIObject : UIObject {
     }
     public string Action { get; }
     public int[] References { get; }
-    public GameObject NewButton() { // Tuple consists of string text, string action, Vector2 position, Vector2 size, int[] references
-        Transform PrimaryButton = GameObject.Find("UI Screen Canvas").transform.GetChild(0);
-        GameObject button = NewObject("Button", Instantiate(PrimaryButton.gameObject));
+    public GameObject NewButton(Transform buttonBase) { // Tuple consists of string text, string action, Vector2 position, Vector2 size, int[] references
+        GameObject button = NewObject("Button", buttonBase.gameObject);
         button.SetActive(true);
-        button.transform.position += PrimaryButton.position;
         button.transform.GetChild(0).localScale /= Size;
         button.GetComponentInChildren<Text>().text = Contents;
         button.AddComponent<UIButton>();

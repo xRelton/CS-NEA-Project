@@ -48,13 +48,12 @@ public class UIScreenController : MonoBehaviour {
                         ShipMechs.PlayerShips[buttonScript.References[0]].GetComponent<ShipInfo>().Port = PortName;
                     }
                 } else if (buttonScript.Action == "ItemPage") {
-                    Debug.Log(buttonScript.References[1]);
                     CreateMarketScreen(PortName, buttonScript.References[0], buttonScript.References[1]);
                 } else if (buttonScript.Action == "ManageItem") {
                     if (buttonScript.References[2] == 0) { // Item is being bought
                         CreateMarketScreen(PortName, buttonScript.References[0], buttonScript.References[1], true);
                     } else { // Item is being sold
-
+                        CreateMarketScreen(PortName, buttonScript.References[0], buttonScript.References[1], true);
                     }
                 }
             }
