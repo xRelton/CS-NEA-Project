@@ -65,10 +65,8 @@ public class UIScreenController : MonoBehaviour {
         List<ButtonUIObject> ItemsButtons = new List<ButtonUIObject>();
         int move = 0;
         for (int i = 0; i < MarketSim.Items.Count; i++) {
-            if (MarketSim.ItemInPort(i, portName)) {
-                ItemsButtons.Add(new ButtonUIObject(MarketSim.Items[i].Name, "ItemPage", new Vector2(-5, move), new int[] { shipNum, i }, new Vector2(0.6f, 1)));
-                move--;
-            }
+            ItemsButtons.Add(new ButtonUIObject(MarketSim.Items[i].Name, "ItemPage", new Vector2(-5, move), new int[] { shipNum, i }, new Vector2(0.6f, 1)));
+            move--;
         }
         List<TextUIObject> PageInfo = new List<TextUIObject>();
         PageInfo.Add(new TextUIObject(portName + " Market", new Vector2(0, 3)));
@@ -77,16 +75,23 @@ public class UIScreenController : MonoBehaviour {
                 PageInfo.Add(new TextUIObject("Population: " + Port.Population, new Vector2(2, 0.5f)));
                 PageInfo.Add(new TextUIObject("Climate: " + MarketSim.Climates[Port.Climate], new Vector2(2, -0.5f)));
             } else { // If the user has chosen an item to buy / sell
-                float[] PriceAndQuantity = MarketSim.GetPriceAndQuantity(item, portName);
-                PageInfo.Add(new TextUIObject("Price: " + PriceAndQuantity[0], new Vector2(2, 2)));
-                PageInfo.Add(new TextUIObject("Quantity: " + PriceAndQuantity[1], new Vector2(2, 1)));
-                ItemsButtons.Add(new ButtonUIObject("Buy", "ManageItem", new Vector2(2, -2), new int[] { shipNum, item, 0 }, new Vector2(0.6f, 1)));
-                ItemsButtons.Add(new ButtonUIObject("Sell", "ManageItem", new Vector2(2, -3), new int[] { shipNum, item, 1 }, new Vector2(0.6f, 1)));
+                int[] PriceAndQuantity = MarketSim.GetPriceAndQuantity(item, portName);
+                PageInfo.Add(new TextUIObject("Price (Roman Coins): " + PriceAndQuantity[0], new Vector2(2, 1.5f)));
+                PageInfo.Add(new TextUIObject("Quantity: " + PriceAndQuantity[1], new Vector2(2, 0.5f)));
+                if (PriceAndQuantity[1] > 0) {
+                    ItemsButtons.Add(new ButtonUIObject("Buy", "ManageItem", new Vector2(2, -2.5f), new int[] { shipNum, item, 0 }, new Vector2(0.6f, 1)));
+                }
+                if (PriceAndQuantity[0] > 0) {
+                    ItemsButtons.Add(new ButtonUIObject("Sell", "ManageItem", new Vector2(2, -3.5f), new int[] { shipNum, item, 1 }, new Vector2(0.6f, 1)));
+                }
+                PageInfo.Add(new TextUIObject("Disclaimer: Price listed is buy price, sell price is marked down.", new Vector2(2, -2.75f), new Vector2(0.4f, 0.4f)));
             }
             transform.GetComponentInParent<UserInterfaceController>().CreateScreen(PageInfo, ItemsButtons, true);
         } else {
             List<SliderUIObject> SliderInfo = new List<SliderUIObject>();
-            SliderInfo.Add(new SliderUIObject("Sales", new Vector2(2, 0), new Vector2(1, 1)));
+            SliderInfo.Add(new SliderUIObject("Sales", new Vector2(2, -0.5f), new Vector2(1, 1)));
+            PageInfo.Add(new TextUIObject("Price (Roman Coins): ", new Vector2(2, 1.5f)));
+            PageInfo.Add(new TextUIObject("Quantity: ", new Vector2(2, 0.5f)));
             transform.GetComponentInParent<UserInterfaceController>().CreateScreen(PageInfo, SliderInfo, ItemsButtons, true);
         }
         

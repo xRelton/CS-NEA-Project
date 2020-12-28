@@ -22,14 +22,7 @@ public class MarketSimulator : MonoBehaviour {
     void Update() {
 
     }
-    public bool ItemInPort(int itemNum, string portName) {
-        float[] PriceAndQuantity = GetPriceAndQuantity(itemNum, portName);
-        if (PriceAndQuantity[0] > 0 && PriceAndQuantity[1] > 0) {
-            return true;
-        }
-        return false;
-    }
-    public float[] GetPriceAndQuantity(int itemNum, string portName) {
+    public int[] GetPriceAndQuantity(int itemNum, string portName) {
         ItemInfo Item = Items[itemNum];
         PortInfo Port = transform.GetComponent<PortMechanics>().Ports[portName];
         int ClimateAbundance = Item.ClimateAbundance[Climates[Port.Climate]];
@@ -38,14 +31,14 @@ public class MarketSimulator : MonoBehaviour {
         float demandShift = -PED * ((float)System.Math.Log10(Port.Population)); // c = -m * dShift
         float supplyShift = -PES * (ClimateAbundance); // c = -m * sShift
 
-        float quantity = (supplyShift - demandShift) / (PED - PES); // x = (c2 - c1) / (m1 - m2)
-        float price = PED * quantity + demandShift; // y = mx + c
+        int quantity = (int)Mathf.Round((supplyShift - demandShift) / (PED - PES)); // x = (c2 - c1) / (m1 - m2)
+        int price = (int)Mathf.Round(PED * quantity + demandShift) + 1; // y = mx + c
         Debug.DrawLine(new Vector2(0, 0), new Vector2(0, 5), Color.black, 15);
         Debug.DrawLine(new Vector2(0, 0), new Vector2(5, 0), Color.black, 15);
         Debug.DrawRay(new Vector2(0, demandShift), new Vector2(5, 5*PED), Color.red, 15);
         Debug.DrawRay(new Vector2(0, supplyShift), new Vector2(5, 5*PES), Color.green, 15);
         transform.GetComponentInParent<InteractiveComponents>().DrawPoint(new Vector2(quantity, price), 4);
-        return new float[] { price, quantity };
+        return new int[] { price, quantity };
     }
 }
 public class ItemInfo {

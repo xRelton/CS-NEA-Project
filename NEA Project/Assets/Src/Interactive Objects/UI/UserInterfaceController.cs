@@ -104,7 +104,7 @@ public class TextUIObject : UIObject {
         text.GetComponent<Text>().font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         text.GetComponent<Text>().text = Contents;
         text.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
-        text.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 30);
+        text.GetComponent<RectTransform>().sizeDelta = new Vector2(180, 60);
         return text;
     }
 }
