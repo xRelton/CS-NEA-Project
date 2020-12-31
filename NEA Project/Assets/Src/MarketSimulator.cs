@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MarketSimulator : MonoBehaviour {
     public string[] Climates; // Named after wikipedia biome page classifications https://upload.wikimedia.org/wikipedia/commons/e/e4/Vegetation.png
     public List<ItemInfo> Items;
+    UIScreenController UIScreen;
     // Start is called before the first frame update
     void Start() {
+        UIScreen = transform.parent.GetComponentInChildren<UIScreenController>();
         Items = new List<ItemInfo>();
         Climates = new string[] {
             "Mediterranean",
@@ -20,11 +23,26 @@ public class MarketSimulator : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-
+        foreach (GameObject slider in UIScreen.Sliders) {
+            if (slider.name.Split()[1].Contains("Sales")) {
+                foreach (GameObject text in UIScreen.Texts) {
+                    if (text.name.Split()[1].Contains("Price")) {
+                        foreach (GameObject button in UIScreen.Buttons) {
+                            if (button.name.Contains("Buy") || button.name.Contains("Sell")) {
+                                text.GetComponent<Text>().text = "Price(Roman Coins): " + slider.GetComponent<Slider>().value * button.GetComponent<UIButton>().References[0];
+                            }
+                        }
+                    }
+                    if (text.name.Split()[1].Contains("Quantity")) {
+                        text.GetComponent<Text>().text = "Quantity: " + slider.GetComponent<Slider>().value;
+                    }
+                }
+            }
+        }
     }
-    public int[] GetPriceAndQuantity(int itemNum, string portName) {
+    public int[] GetPriceAndQuantity(int itemNum, int portNum) {
         ItemInfo Item = Items[itemNum];
-        PortInfo Port = transform.GetComponent<PortMechanics>().Ports[portName];
+        PortInfo Port = transform.GetComponent<PortMechanics>().Ports[portNum];
         int ClimateAbundance = Item.ClimateAbundance[Climates[Port.Climate]];
         float PED = -1; // (demand gradient m) horizontal = elastic, vertical = inelastic
         float PES = 1; // (supply gradient m) horizontal = elastic, vertical = inelastic

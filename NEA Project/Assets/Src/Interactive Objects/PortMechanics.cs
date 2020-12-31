@@ -4,31 +4,31 @@ using UnityEngine;
 
 public class PortMechanics : MonoBehaviour {
     InteractiveComponents Interactions;
-    public Dictionary<string, PortInfo> Ports;
+    public List<PortInfo> Ports;
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
-        Ports = new Dictionary<string, PortInfo>();
-        Ports.Add("Alexandria", new PortInfo(200000 + 17891, 4));
-        Ports.Add("Athens", new PortInfo(100000 - 802, 0));
-        Ports.Add("Byzantium", new PortInfo(250000 - 28751, 2));
-        Ports.Add("Carthage", new PortInfo(100000 + 41741, 3));
-        Ports.Add("Jaffa", new PortInfo(120000 - 4950, 1));
-        Ports.Add("Rome", new PortInfo(180000 + 1553, 0));
+        Ports = new List<PortInfo>();
+        Ports.Add(new PortInfo("Alexandria", 200000 + 17891, 4));
+        Ports.Add(new PortInfo("Athens", 100000 - 802, 0));
+        Ports.Add(new PortInfo("Byzantium", 250000 - 28751, 2));
+        Ports.Add(new PortInfo("Carthage", 100000 + 41741, 3));
+        Ports.Add(new PortInfo("Jaffa", 120000 - 4950, 1));
+        Ports.Add(new PortInfo("Rome", 180000 + 1553, 0));
 
-        Ports.Add("Caralis", new PortInfo(16000 + 496, 0));
-        Ports.Add("New Carthage", new PortInfo(20000 - 237, 1));
-        Ports.Add("Cyrene", new PortInfo(14000 + 171, 0));
-        Ports.Add("Iol", new PortInfo(13000 - 211, 0));
-        Ports.Add("Itanus", new PortInfo(12000 - 329, 0));
-        Ports.Add("Leptis", new PortInfo(30000 - 465, 0));
+        Ports.Add(new PortInfo("Caralis", 16000 + 496, 0));
+        Ports.Add(new PortInfo("New Carthage", 20000 - 237, 1));
+        Ports.Add(new PortInfo("Cyrene", 14000 + 171, 0));
+        Ports.Add(new PortInfo("Iol", 13000 - 211, 0));
+        Ports.Add(new PortInfo("Itanus", 12000 - 329, 0));
+        Ports.Add(new PortInfo("Leptis", 30000 - 465, 0));
 
-        Ports.Add("Massalia", new PortInfo(54000 + 450, 2));
-        Ports.Add("Salamis", new PortInfo(25000 + 329, 0));
-        Ports.Add("Salona", new PortInfo(30000 + 122, 3));
-        Ports.Add("Sparta", new PortInfo(50000 - 206, 0));
-        Ports.Add("Syracuse", new PortInfo(60000 - 111, 0));
-        Ports.Add("Tarraco", new PortInfo(20000 + 162, 3));
+        Ports.Add(new PortInfo("Massalia", 54000 + 450, 2));
+        Ports.Add(new PortInfo("Salamis", 25000 + 329, 0));
+        Ports.Add(new PortInfo("Salona", 30000 + 122, 3));
+        Ports.Add(new PortInfo("Sparta", 50000 - 206, 0));
+        Ports.Add(new PortInfo("Syracuse", 60000 - 111, 0));
+        Ports.Add(new PortInfo("Tarraco", 20000 + 162, 3));
     }
     // Update is called once per frame
     void Update() {
@@ -47,7 +47,14 @@ public class PortMechanics : MonoBehaviour {
                             List<int> ShipsHome = new List<int>();
                             for (int k = 0; k < Ships.Count; k++) {
                                 if (Ships[k].GetComponent<ShipInfo>().Docked()) {
-                                    if (Ships[k].GetComponent<ShipInfo>().Port == PortObject.name) {
+                                    int PortNum = 0;
+                                    for (int l = 0; l < Ports.Count; l++) {
+                                        if (Ports[l].Name == PortObject.name) {
+                                            PortNum = l;
+                                            break;
+                                        }
+                                    }
+                                    if (Ships[k].GetComponent<ShipInfo>().Port == PortNum) {
                                         ShipsHome.Add(k);
                                     } else {
                                         ShipsAway.Add(k);
@@ -75,13 +82,15 @@ public class PortMechanics : MonoBehaviour {
     }
 }
 public class PortInfo {
+    string name;
     int population;
     int climate;
-    public PortInfo(double population, int climate) {
+    public PortInfo(string name, double population, int climate) {
+        this.name = name;
         this.population = (int)population;
         this.climate = climate;
     }
-
+    public string Name { get => name; }
     public int Population { get => population; }
     public int Climate { get => climate; }
 }

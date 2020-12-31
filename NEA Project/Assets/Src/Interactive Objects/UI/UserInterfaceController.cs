@@ -29,15 +29,21 @@ public class UserInterfaceController : MonoBehaviour {
     }
     public void CreateScreen(List<TextUIObject> texts, List<ButtonUIObject> buttons, bool closeButton, bool portNameIsTitle = false) { // Used to create user interface screens that are interacted with by the player
         UIScreen.gameObject.SetActive(true);
+        List<PortInfo> AllPorts = GameObject.Find("Port").GetComponent<PortMechanics>().Ports;
         if (portNameIsTitle) {
-            UIScreen.PortName = texts[0].Contents;
+            for (int i = 0; i < AllPorts.Count; i++) {
+                if (AllPorts[i].Name == texts[0].Contents) {
+                    UIScreen.PortNum = i;
+                    break;
+                }
+            }
         }
         List<GameObject> allObjects = new List<GameObject>(UIScreen.Texts.Count + UIScreen.Sliders.Count + UIScreen.Buttons.Count);
         allObjects.AddRange(UIScreen.Texts);
         allObjects.AddRange(UIScreen.Sliders);
         allObjects.AddRange(UIScreen.Buttons);
         foreach (GameObject objToDelete in allObjects) { // Destroys all buttons, texts and sliders from the previous screen except the close and back buttons
-            if (objToDelete.name != "Close Button" && objToDelete.name != "Back Button") {
+            if (objToDelete.transform.parent.name == "UI Screen Canvas") {
                 Destroy(objToDelete);
             }
         }
@@ -109,9 +115,13 @@ public class TextUIObject : UIObject {
     }
 }
 public class SliderUIObject : UIObject {
-    public SliderUIObject(string contents, Vector2 position, Vector2 size) : base(contents, position, size) { }
+    private int maxValue;
+    public SliderUIObject(string contents, Vector2 position, Vector2 size, int maxValue) : base(contents, position, size) {
+        this.maxValue = maxValue;
+    }
     public GameObject NewSlider(Transform sliderBase) { // Tuple consists of string name, Vector2 position, Vector2 size
         GameObject slider = NewObject("Slider", sliderBase.gameObject);
+        slider.GetComponent<Slider>().maxValue = maxValue;
         slider.SetActive(true);
         return slider;
     }

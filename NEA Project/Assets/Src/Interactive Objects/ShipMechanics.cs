@@ -71,13 +71,13 @@ public class ShipMechanics : MonoBehaviour {
 }
 public class ShipInfo : MonoBehaviour {
     InteractiveComponents interactions;
-    string previousPort; // Name of last port the ship docked at
-    string targetPort; // Name of port being headed to if the ship is travelling
+    int previousPort; // Number of last port the ship docked at
+    int targetPort; // Number of port being headed to if the ship is travelling
     List<Vector2> route = new List<Vector2>(); // List of points the ship must travel between to reach targetPort
     Dictionary<int, int> inventory = new Dictionary<int, int>(); // Includes item id and number of items
     public InteractiveComponents Interactions { set { interactions = value; } }
     public string Type { set; get; }
-    public string Port { set { targetPort = value; } get { return previousPort; } }
+    public int Port { set { targetPort = value; } get { return previousPort; } }
     public List<Vector2> Route { get { return route; } }
     public void Dock() {
         previousPort = targetPort;
@@ -87,10 +87,11 @@ public class ShipInfo : MonoBehaviour {
         return previousPort == targetPort;
     }
     public Vector3 GetPortPos(bool portIsTarget) {
+        List<PortInfo> AllPorts = GameObject.Find("Port").GetComponent<PortMechanics>().Ports;
         if (portIsTarget) {
-            return GameObject.Find(targetPort).transform.position;
+            return GameObject.Find(AllPorts[targetPort].Name).transform.position;
         } else {
-            return GameObject.Find(previousPort).transform.position;
+            return GameObject.Find(AllPorts[previousPort].Name).transform.position;
         }
     }
     Vector2 GetSeaPos(Vector2 shipPos, Vector2 targetPos) {
