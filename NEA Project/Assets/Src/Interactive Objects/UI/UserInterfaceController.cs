@@ -38,11 +38,11 @@ public class UserInterfaceController : MonoBehaviour {
                 }
             }
         }
-        List<GameObject> allObjects = new List<GameObject>(UIScreen.Texts.Count + UIScreen.Sliders.Count + UIScreen.Buttons.Count);
-        allObjects.AddRange(UIScreen.Texts);
-        allObjects.AddRange(UIScreen.Sliders);
-        allObjects.AddRange(UIScreen.Buttons);
-        foreach (GameObject objToDelete in allObjects) { // Destroys all buttons, texts and sliders from the previous screen except the close and back buttons
+        List<GameObject> AllObjects = new List<GameObject>(UIScreen.Texts.Count + UIScreen.Sliders.Count + UIScreen.Buttons.Count);
+        AllObjects.AddRange(UIScreen.Texts);
+        AllObjects.AddRange(UIScreen.Sliders);
+        AllObjects.AddRange(UIScreen.Buttons);
+        foreach (GameObject objToDelete in AllObjects) { // Destroys all buttons, texts and sliders from the previous screen except the close and back buttons
             if (objToDelete.transform.parent.name == "UI Screen Canvas") {
                 Destroy(objToDelete);
             }
@@ -73,7 +73,6 @@ public class UserInterfaceController : MonoBehaviour {
         UIScreen.Sliders = SliderObjects;
     }
 }
-
 public class UIObject {
     protected UIObject(string contents, Vector2 position, Vector2 size) {
         Contents = contents;

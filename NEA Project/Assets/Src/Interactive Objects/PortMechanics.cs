@@ -29,6 +29,11 @@ public class PortMechanics : MonoBehaviour {
         Ports.Add(new PortInfo("Sparta", 50000 - 206, 0));
         Ports.Add(new PortInfo("Syracuse", 60000 - 111, 0));
         Ports.Add(new PortInfo("Tarraco", 20000 + 162, 3));
+        foreach (PortInfo port in Ports) {
+            for (int i = 0; i < transform.GetComponent<MarketSimulator>().Items.Count; i++) {
+                port.Inventory.Add(i, 0);
+            }
+        }
     }
     // Update is called once per frame
     void Update() {
@@ -83,6 +88,7 @@ public class PortMechanics : MonoBehaviour {
 }
 public class PortInfo {
     string name;
+    Dictionary<int, int> inventory = new Dictionary<int, int>(); // Includes item id and number of items
     int population;
     int climate;
     public PortInfo(string name, double population, int climate) {
@@ -91,6 +97,7 @@ public class PortInfo {
         this.climate = climate;
     }
     public string Name { get => name; }
+    public Dictionary<int, int> Inventory { set => inventory = value; get => inventory; }
     public int Population { get => population; }
     public int Climate { get => climate; }
 }

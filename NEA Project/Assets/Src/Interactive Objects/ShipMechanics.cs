@@ -75,10 +75,16 @@ public class ShipInfo : MonoBehaviour {
     int targetPort; // Number of port being headed to if the ship is travelling
     List<Vector2> route = new List<Vector2>(); // List of points the ship must travel between to reach targetPort
     Dictionary<int, int> inventory = new Dictionary<int, int>(); // Includes item id and number of items
-    public InteractiveComponents Interactions { set { interactions = value; } }
+    public InteractiveComponents Interactions { set { interactions = value;
+            for (int i = 0; i < GameObject.Find("Port").GetComponent<MarketSimulator>().Items.Count; i++) {
+                inventory.Add(i, 0);
+            }
+        }
+    }
     public string Type { set; get; }
-    public int Port { set { targetPort = value; } get { return previousPort; } }
-    public List<Vector2> Route { get { return route; } }
+    public int Port { set => targetPort = value; get => previousPort; }
+    public Dictionary<int, int> Inventory { set => inventory = value; get => inventory; }
+    public List<Vector2> Route { get => route; }
     public void Dock() {
         previousPort = targetPort;
         transform.position = GetPortPos(true);
