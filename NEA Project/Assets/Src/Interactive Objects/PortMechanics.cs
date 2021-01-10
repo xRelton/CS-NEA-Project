@@ -41,7 +41,7 @@ public class PortMechanics : MonoBehaviour {
             for (int j = 0; j < transform.GetChild(i).childCount; j++) { // Iterates through ports
                 GameObject PortObject = transform.GetChild(i).GetChild(j).gameObject;
                 GameObject UIScreen = GameObject.Find("User Interface").transform.GetChild(1).gameObject;
-                List<GameObject> Ships = GameObject.Find("Ship").GetComponent<ShipMechanics>().PlayerShips;
+                List<GameObject> Ships = GameObject.Find("Ship").GetComponent<ShipMechanics>().Ships;
                 if (Interactions.MouseOnObject(PortObject)) {
                     if (UIScreen.activeSelf == false) {
                         if (PortObject.GetComponent<Renderer>().material.GetColor("_Color") != Color.white) {

@@ -5,21 +5,19 @@ using System.Linq;
 public class ShipMechanics : MonoBehaviour {
     InteractiveComponents Interactions;
     List<Vector2> Nodes = new List<Vector2>();
-    public string[] ShipNames = new string[] { "barque", "brig", "carrack", "frigate", "full-rigged ship", "schooner", "ship of the line", "sloop of war" };
-    public ShipType ShipTypes = new ShipType();
-    public List<GameObject> PlayerShips = new List<GameObject>();
+    public List<ShipType> ShipTypes = new List<ShipType>();
+    public List<GameObject> Ships = new List<GameObject>();
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
-        ShipTypes.Interactions = Interactions;
-        ShipTypes.SetStat(ShipNames[0], 0.2f, 1, 2); // Sets Barque size, speed and strength
-        ShipTypes.SetStat(ShipNames[1], 0.2f, 1, 2); // Sets Brig size, speed and strength
-        ShipTypes.SetStat(ShipNames[2], 0.2f, 1, 2); // Sets Carrack size, speed and strength
-        ShipTypes.SetStat(ShipNames[3], 0.2f, 1, 2); // Sets Frigate size, speed and strength
-        ShipTypes.SetStat(ShipNames[4], 0.2f, 1, 2); // Sets Full-rigged Ship size, speed and strength
-        ShipTypes.SetStat(ShipNames[5], 0.2f, 1, 2); // Sets Schooner size, speed and strength
-        ShipTypes.SetStat(ShipNames[6], 0.2f, 1, 2); // Sets Ship of the Line size, speed and strength
-        ShipTypes.SetStat(ShipNames[7], 0.2f, 1, 2); // Sets Sloop of War size, speed and strength
+        ShipTypes.Add(new ShipType("barque", 0.2f, 1, 2, 10)); // Sets Barque info
+        ShipTypes.Add(new ShipType("brig", 0.2f, 1, 2, 10)); // Sets Brig info
+        ShipTypes.Add(new ShipType("carrack", 0.2f, 1, 2, 10)); // Sets Carrack info
+        ShipTypes.Add(new ShipType("frigate", 0.2f, 1, 2, 10)); // Sets Frigate info
+        ShipTypes.Add(new ShipType("full-rigged ship", 0.2f, 1, 2, 10)); // Sets Full-rigged Ship info
+        ShipTypes.Add(new ShipType("schooner", 0.2f, 1, 2, 10)); // Sets Schooner info
+        ShipTypes.Add(new ShipType("ship of the line", 0.2f, 1, 2, 10)); // Sets Ship of the Line info
+        ShipTypes.Add(new ShipType("sloop of war", 0.2f, 1, 2, 10)); // Sets Sloop of War info
         for (float x = -8; x <= 10; x += 0.5f) {
             for (float y = -2; y <= 3; y += 0.5f) {
                 Vector2 NewNode = new Vector2(x, y);
@@ -31,41 +29,45 @@ public class ShipMechanics : MonoBehaviour {
     }
     // Update is called once per frame
     void Update() {
-        foreach (GameObject PlayerShip in PlayerShips) {
-            ShipInfo PlayerShipInfo = PlayerShip.GetComponent<ShipInfo>();
-            if (!PlayerShipInfo.Docked()) {
-                if (PlayerShipInfo.Route.Any()) {
-                    Vector2 NextRouteTarget = PlayerShipInfo.Route[PlayerShipInfo.Route.Count - 1];
-                    Vector3 NextMove = ShipTypes.GetSpeed(PlayerShipInfo.Type) / 10 * Interactions.TimeDilation * Interactions.PerfectMove(PlayerShip.transform.position, NextRouteTarget);
-                    // If the new position is not on land
-                    PlayerShip.transform.position += NextMove;
-                    // Else navigate around land until new position not land
-                    if (Interactions.InVectDomain(PlayerShip.transform.position, NextRouteTarget, 0.01f)) {
-                        PlayerShipInfo.Route.Remove(NextRouteTarget);
+        foreach (GameObject ship in Ships) {
+            ShipInfo shipInfo = ship.GetComponent<ShipInfo>();
+            if (!shipInfo.Docked()) {
+                if (shipInfo.Route.Any()) {
+                    Vector2 NextRouteTarget = shipInfo.Route[shipInfo.Route.Count - 1];
+                    Vector3 NextMove = ShipTypes[shipInfo.Type].Speed / 10 * Interactions.TimeDilation * Interactions.PerfectMove(ship.transform.position, NextRouteTarget);
+                    ship.transform.position += NextMove;
+                    if (Interactions.InVectDomain(ship.transform.position, NextRouteTarget, 0.01f)) {
+                        shipInfo.Route.Remove(NextRouteTarget);
                     }
                 } else {
-                    PlayerShipInfo.SetShipRoute(PlayerShip.transform.position, Nodes);
+                    shipInfo.SetShipRoute(ship.transform.position, Nodes);
                 }
-                if (Interactions.InVectDomain(PlayerShip.transform.position, PlayerShipInfo.GetPortPos(true), 0.01f)) {
-                    PlayerShipInfo.Dock();
-                    PlayerShipInfo.Route.Clear();
+                if (Interactions.InVectDomain(ship.transform.position, shipInfo.GetPortPos(true), 0.01f)) {
+                    shipInfo.Dock();
+                    shipInfo.Route.Clear();
                 }
             }
         }
     }
-    public GameObject NewShip(string name, string type, Transform parent) {
-        GameObject NewShip = new GameObject(type);
-        NewShip.name = name;
+    public GameObject NewShip(string owner, int type, Transform parent) {
+        int shipNum = 1;
+        foreach (GameObject ship in Ships) {
+            if (ship.GetComponent<ShipInfo>().Type == type) {
+                shipNum++;
+            }
+        }
+        GameObject NewShip = new GameObject(ShipTypes[type].Name + " " + shipNum);
         NewShip.transform.parent = parent;
         NewShip.AddComponent<SpriteRenderer>();
-        NewShip.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(string.Format("Sprites/Ships/{0}", type));
+        NewShip.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(string.Format("Sprites/Ships/{0}", ShipTypes[type].Name));
         NewShip.GetComponent<SpriteRenderer>().sortingLayerName = "Default";
         NewShip.GetComponent<SpriteRenderer>().sortingOrder = 1;
         NewShip.AddComponent<BoxCollider2D>();
         NewShip.AddComponent<ShipInfo>();
+        NewShip.GetComponent<ShipInfo>().Owner = owner;
         NewShip.GetComponent<ShipInfo>().Type = type;
         NewShip.GetComponent<ShipInfo>().Interactions = Interactions;
-        NewShip.transform.localScale = new Vector2(ShipTypes.GetSize(type), ShipTypes.GetSize(type));
+        NewShip.transform.localScale = new Vector2(ShipTypes[type].Size, ShipTypes[type].Size);
         return NewShip;
     }
 }
@@ -74,16 +76,23 @@ public class ShipInfo : MonoBehaviour {
     int previousPort; // Number of last port the ship docked at
     int targetPort; // Number of port being headed to if the ship is travelling
     List<Vector2> route = new List<Vector2>(); // List of points the ship must travel between to reach targetPort
-    Dictionary<int, int> inventory = new Dictionary<int, int>(); // Includes item id and number of items
-    public InteractiveComponents Interactions { set { interactions = value;
-            for (int i = 0; i < GameObject.Find("Port").GetComponent<MarketSimulator>().Items.Count; i++) {
-                inventory.Add(i, 0);
-            }
+    int[] inventory; // Includes item id and number of items
+    public InteractiveComponents Interactions {
+        set {
+            interactions = value; inventory = new int[GameObject.Find("Port").GetComponent<MarketSimulator>().Items.Count];
         }
     }
-    public string Type { set; get; }
+    public string Owner { set; get; }
+    public int Type { set; get; }
     public int Port { set => targetPort = value; get => previousPort; }
-    public Dictionary<int, int> Inventory { set => inventory = value; get => inventory; }
+    public int[] Inventory { set => inventory = value; get => inventory; }
+    public int GetUsedSlots() {
+        int usedSlots = 0;
+        foreach (int item in inventory) {
+            usedSlots += item;
+        }
+        return usedSlots;
+    }
     public List<Vector2> Route { get => route; }
     public void Dock() {
         previousPort = targetPort;
@@ -192,13 +201,21 @@ public class ShipInfo : MonoBehaviour {
     }
 }
 public class ShipType {
-    InteractiveComponents interactions;
-    Dictionary<string, float[]> shipStats = new Dictionary<string, float[]>();
-    public InteractiveComponents Interactions { set { interactions = value; } }
-    public void SetStat(string name, float size, float speed, float strength) {
-        shipStats.Add(name, new float[] { size, speed, strength });
+    string name;
+    float size;
+    float speed;
+    float strength;
+    int slots;
+    public ShipType(string name, float size, float speed, float strength, int slots) {
+        this.name = name;
+        this.size = size;
+        this.speed = speed;
+        this.strength = strength;
+        this.slots = slots;
     }
-    public float GetSize(string name) { return (shipStats[name][0]); }
-    public float GetSpeed(string name) { return (shipStats[name][1]); }
-    public float GetStrength(string name) { return (shipStats[name][2]); }
+    public string Name { get => name; }
+    public float Size { get => size; }
+    public float Speed { get => speed; }
+    public float Strength { get => strength; }
+    public int Slots { get => slots; }
 }
