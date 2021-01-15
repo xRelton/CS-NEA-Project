@@ -71,8 +71,11 @@ public class MarketSimulator : MonoBehaviour {
         int ClimateAbundance = Item.ClimateAbundance[Port.Climate];
         float PED = -1; // (demand gradient m) horizontal = elastic, vertical = inelastic
         float PES = 1; // (supply gradient m) horizontal = elastic, vertical = inelastic
-        float demandShift = -PED * ((float)System.Math.Log10(Port.Population)); // c = -m * dShift
-        float supplyShift = -PES * (ClimateAbundance); // c = -m * sShift
+        float demand = (float)System.Math.Log10(Port.Population);
+        float supply = ClimateAbundance;
+
+        float demandShift = -PED * demand; // c = -m * dShift
+        float supplyShift = -PES * supply; // c = -m * sShift
 
         int quantity = (int)Mathf.Round((supplyShift - demandShift) / (PED - PES)); // x = (c2 - c1) / (m1 - m2)
         int price = (int)Mathf.Round(PED * quantity + demandShift) + 1; // y = mx + c

@@ -10,14 +10,14 @@ public class ShipMechanics : MonoBehaviour {
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
-        ShipTypes.Add(new ShipType("barque", 0.2f, 1, 2, 10)); // Sets Barque info
-        ShipTypes.Add(new ShipType("brig", 0.2f, 1, 2, 10)); // Sets Brig info
-        ShipTypes.Add(new ShipType("carrack", 0.2f, 1, 2, 10)); // Sets Carrack info
-        ShipTypes.Add(new ShipType("frigate", 0.2f, 1, 2, 10)); // Sets Frigate info
-        ShipTypes.Add(new ShipType("full-rigged ship", 0.2f, 1, 2, 10)); // Sets Full-rigged Ship info
-        ShipTypes.Add(new ShipType("schooner", 0.2f, 1, 2, 10)); // Sets Schooner info
-        ShipTypes.Add(new ShipType("ship of the line", 0.2f, 1, 2, 10)); // Sets Ship of the Line info
-        ShipTypes.Add(new ShipType("sloop of war", 0.2f, 1, 2, 10)); // Sets Sloop of War info
+        ShipTypes.Add(new ShipType("Barque", 0.2f, 1, 2, 10)); // Sets Barque info
+        ShipTypes.Add(new ShipType("Brig", 0.2f, 1, 2, 10)); // Sets Brig info
+        ShipTypes.Add(new ShipType("Carrack", 0.2f, 1, 2, 10)); // Sets Carrack info
+        ShipTypes.Add(new ShipType("Frigate", 0.2f, 1, 2, 10)); // Sets Frigate info
+        ShipTypes.Add(new ShipType("Full-rigged Ship", 0.2f, 1, 2, 10)); // Sets Full-rigged Ship info
+        ShipTypes.Add(new ShipType("Schooner", 0.2f, 1, 2, 10)); // Sets Schooner info
+        ShipTypes.Add(new ShipType("Ship of the Line", 0.2f, 1, 2, 10)); // Sets Ship of the Line info
+        ShipTypes.Add(new ShipType("Sloop of War", 0.2f, 1, 2, 10)); // Sets Sloop of War info
         for (float x = -8; x <= 10; x += 0.5f) {
             for (float y = -2; y <= 3; y += 0.5f) {
                 Vector2 NewNode = new Vector2(x, y);
@@ -59,7 +59,7 @@ public class ShipMechanics : MonoBehaviour {
         GameObject NewShip = new GameObject(ShipTypes[type].Name + " " + shipNum);
         NewShip.transform.parent = parent;
         NewShip.AddComponent<SpriteRenderer>();
-        NewShip.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(string.Format("Sprites/Ships/{0}", ShipTypes[type].Name));
+        NewShip.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(string.Format("Sprites/Ships/{0}", ShipTypes[type].Name.ToLower()));
         NewShip.GetComponent<SpriteRenderer>().sortingLayerName = "Default";
         NewShip.GetComponent<SpriteRenderer>().sortingOrder = 1;
         NewShip.AddComponent<BoxCollider2D>();

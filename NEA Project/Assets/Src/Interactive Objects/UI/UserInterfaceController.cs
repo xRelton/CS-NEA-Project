@@ -18,14 +18,11 @@ public class UserInterfaceController : MonoBehaviour {
     }
     // Update is called once per frame
     void Update() {
-        SetUIObjectsPosition(Camera.main.transform.position.x, Camera.main.transform.position.y);
-        SetUIObjectsScale(Math.Abs(Camera.main.transform.position.z) / 9);
+        MatchObjPositionToCamera(transform);
     }
-    public void SetUIObjectsPosition(float xPos, float yPos) {
-        transform.position = new Vector2(xPos, yPos);
-    }
-    public void SetUIObjectsScale(float scale) {
-        transform.localScale = new Vector2(scale, scale);
+    public void MatchObjPositionToCamera(Transform obj) {
+        obj.position = new Vector2(Camera.main.transform.position.x, Camera.main.transform.position.y);
+        obj.localScale = new Vector2(Math.Abs(Camera.main.transform.position.z) / 9, Math.Abs(Camera.main.transform.position.z) / 9);
     }
     public void CreateScreen(List<TextUIObject> texts, List<ButtonUIObject> buttons, bool closeButton, bool portNameIsTitle = false) { // Used to create user interface screens that are interacted with by the player
         UIScreen.gameObject.SetActive(true);
@@ -86,25 +83,22 @@ public class UIObject {
     public string Contents { get; }
     public Vector2 Position { get; }
     public Vector2 Size { get; }
-    protected GameObject NewObject(string type, GameObject baseObject = null) {
-        GameObject Object = baseObject ?? new GameObject(string.Format("{0} {1}", type, Contents));
-        Object.transform.SetParent(GameObject.Find("UI Screen Canvas").transform);
-        if (baseObject == null) {
-            Object.transform.position = new Vector2(Position.x, Position.y);
-            Object.transform.localScale = new Vector2(Size.x, Size.y);
-        } else {
-            Object.name = string.Format("{0} {1}", type, Contents);
-            Object.transform.position += new Vector3(Position.x, Position.y, 0);
-            Object.transform.localScale *= new Vector2(Size.x, Size.y);
+    protected GameObject NewUIObject(string type, GameObject baseObject = null) {
+        GameObject UIObject = baseObject ?? new GameObject(string.Format("{0} {1}", type, Contents));
+        UIObject.transform.position += new Vector3(Position.x, Position.y, 0);
+        UIObject.transform.localScale *= new Vector2(Size.x, Size.y);
+        if (baseObject != null) {
+            UIObject.name = string.Format("{0} {1}", type, Contents);
         }
-        return Object;
+        UIObject.transform.SetParent(GameObject.Find("UI Screen Canvas").transform, false);
+        return UIObject;
     }
 }
 public class TextUIObject : UIObject {
     public TextUIObject(string contents, Vector2 position, Vector2 size = new Vector2()) : base(contents, position, size) { }
     public GameObject NewText() {
-        GameObject text = NewObject("Text");
-        text.transform.localScale = new Vector2(0.05f, 0.05f) * Size;
+        GameObject text = NewUIObject("Text");
+        text.transform.localScale *= new Vector2(0.05f, 0.05f) * Size;
         text.AddComponent<Text>();
         text.GetComponent<Text>().font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         text.GetComponent<Text>().text = Contents;
@@ -119,7 +113,7 @@ public class SliderUIObject : UIObject {
         this.maxValue = maxValue;
     }
     public GameObject NewSlider(Transform sliderBase) { // Tuple consists of string name, Vector2 position, Vector2 size
-        GameObject slider = NewObject("Slider", sliderBase.gameObject);
+        GameObject slider = NewUIObject("Slider", sliderBase.gameObject);
         slider.GetComponent<Slider>().maxValue = maxValue;
         slider.SetActive(true);
         return slider;
@@ -133,7 +127,7 @@ public class ButtonUIObject : UIObject {
     public string Action { get; }
     public int[] References { get; }
     public GameObject NewButton(Transform buttonBase) { // Tuple consists of string text, string action, Vector2 position, Vector2 size, int[] references
-        GameObject button = NewObject("Button", buttonBase.gameObject);
+        GameObject button = NewUIObject("Button", buttonBase.gameObject);
         button.SetActive(true);
         button.transform.GetChild(0).localScale /= Size;
         button.GetComponentInChildren<Text>().text = Contents;
