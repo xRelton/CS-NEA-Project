@@ -57,12 +57,13 @@
   <ItemGroup>
      <Compile Include="Assets\Src\Interactive Objects\UI\Screen\UIButton.cs" />
      <Compile Include="Assets\Src\Interactive Objects\PortMechanics.cs" />
+     <Compile Include="Assets\Src\Interactive Objects\MarketSimulator.cs" />
      <Compile Include="Assets\Src\FlyCamera.cs" />
-     <Compile Include="Assets\Src\MarketSimulator.cs" />
      <Compile Include="Assets\Src\Interactive Objects\UI\Screen\UIScreenController.cs" />
      <Compile Include="Assets\Src\Interactive Objects\InteractiveComponents.cs" />
      <Compile Include="Assets\Src\Interactive Objects\UI\GameSpeedControl.cs" />
      <Compile Include="Assets\Src\Interactive Objects\UI\UserInterfaceController.cs" />
+     <Compile Include="Assets\Src\Interactive Objects\WeatherMechanics.cs" />
      <Compile Include="Assets\Src\Interactive Objects\ShipMechanics.cs" />
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>E:/Projects/Computer Science NEA/Merchant of the Sea/NEA Project/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>

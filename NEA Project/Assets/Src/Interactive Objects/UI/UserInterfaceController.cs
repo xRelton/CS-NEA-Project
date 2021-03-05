@@ -26,14 +26,8 @@ public class UserInterfaceController : MonoBehaviour {
     }
     public void CreateScreen(List<TextUIObject> texts, List<ButtonUIObject> buttons, bool closeButton, bool portNameIsTitle = false) { // Used to create user interface screens that are interacted with by the player
         UIScreen.gameObject.SetActive(true);
-        List<PortInfo> AllPorts = GameObject.Find("Port").GetComponent<PortMechanics>().Ports;
         if (portNameIsTitle) {
-            for (int i = 0; i < AllPorts.Count; i++) {
-                if (AllPorts[i].Name == texts[0].Contents) {
-                    UIScreen.PortNum = i;
-                    break;
-                }
-            }
+            UIScreen.PortID = Array.FindIndex(GameObject.Find("Port").GetComponent<PortMechanics>().Ports, element => element.Name == texts[0].Contents);
         }
         List<GameObject> AllObjects = new List<GameObject>(UIScreen.Texts.Count + UIScreen.Sliders.Count + UIScreen.Buttons.Count);
         AllObjects.AddRange(UIScreen.Texts);
@@ -61,7 +55,8 @@ public class UserInterfaceController : MonoBehaviour {
         UIScreen.Sliders = new List<GameObject>();
         UIScreen.Buttons = ButtonObjects;
     }
-    public void CreateScreen(List<TextUIObject> texts, List<SliderUIObject> sliders, List<ButtonUIObject> buttons, bool closeButton, bool portNameIsTitle = false) { // Used to create user interface screens that are interacted with by the player
+    public void CreateScreen(List<TextUIObject> texts, List<SliderUIObject> sliders, List<ButtonUIObject> buttons, bool closeButton, bool portNameIsTitle = false) {
+        // Used to create user interface screens that are interacted with by the player
         CreateScreen(texts, buttons, closeButton, portNameIsTitle);
         List<GameObject> SliderObjects = new List<GameObject>();
         foreach (SliderUIObject slider in sliders) {

@@ -7,17 +7,18 @@ public class ShipMechanics : MonoBehaviour {
     List<Vector2> Nodes = new List<Vector2>();
     public List<ShipType> ShipTypes = new List<ShipType>();
     public List<GameObject> Ships = new List<GameObject>();
+    List<AIOpponent> AI;
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
-        ShipTypes.Add(new ShipType("Barque", 0.2f, 1, 2, 10)); // Sets Barque info
-        ShipTypes.Add(new ShipType("Brig", 0.2f, 1, 2, 10)); // Sets Brig info
-        ShipTypes.Add(new ShipType("Carrack", 0.2f, 1, 2, 10)); // Sets Carrack info
-        ShipTypes.Add(new ShipType("Frigate", 0.2f, 1, 2, 10)); // Sets Frigate info
-        ShipTypes.Add(new ShipType("Full-rigged Ship", 0.2f, 1, 2, 10)); // Sets Full-rigged Ship info
-        ShipTypes.Add(new ShipType("Schooner", 0.2f, 1, 2, 10)); // Sets Schooner info
-        ShipTypes.Add(new ShipType("Ship of the Line", 0.2f, 1, 2, 10)); // Sets Ship of the Line info
-        ShipTypes.Add(new ShipType("Sloop of War", 0.2f, 1, 2, 10)); // Sets Sloop of War info
+        ShipTypes.Add(new ShipType("Barque", 0.2f, 1, 10)); // Sets Barque info
+        ShipTypes.Add(new ShipType("Brig", 0.2f, 1, 10)); // Sets Brig info
+        ShipTypes.Add(new ShipType("Carrack", 0.2f, 1, 10)); // Sets Carrack info
+        ShipTypes.Add(new ShipType("Frigate", 0.2f, 1, 10)); // Sets Frigate info
+        ShipTypes.Add(new ShipType("Full-rigged Ship", 0.2f, 1, 10)); // Sets Full-rigged Ship info
+        ShipTypes.Add(new ShipType("Schooner", 0.2f, 1, 10)); // Sets Schooner info
+        ShipTypes.Add(new ShipType("Ship of the Line", 0.2f, 1, 10)); // Sets Ship of the Line info
+        ShipTypes.Add(new ShipType("Sloop of War", 0.3f, 1, 30)); // Sets Sloop of War info
         for (float x = -8; x <= 10; x += 0.5f) {
             for (float y = -2; y <= 3; y += 0.5f) {
                 Vector2 NewNode = new Vector2(x, y);
@@ -26,6 +27,10 @@ public class ShipMechanics : MonoBehaviour {
                 }
             }
         }
+        AI = GameObject.Find("Port").GetComponent<MarketSimulator>().AI;
+        for (int i = 0; i < 5; i++) {
+            AI.Add(new AIOpponent(AI.Count));
+        }
     }
     // Update is called once per frame
     void Update() {
@@ -33,12 +38,7 @@ public class ShipMechanics : MonoBehaviour {
             ShipInfo shipInfo = ship.GetComponent<ShipInfo>();
             if (!shipInfo.Docked()) {
                 if (shipInfo.Route.Any()) {
-                    Vector2 NextRouteTarget = shipInfo.Route[shipInfo.Route.Count - 1];
-                    Vector3 NextMove = ShipTypes[shipInfo.Type].Speed / 10 * Interactions.TimeDilation * Interactions.PerfectMove(ship.transform.position, NextRouteTarget);
-                    ship.transform.position += NextMove;
-                    if (Interactions.InVectDomain(ship.transform.position, NextRouteTarget, 0.01f)) {
-                        shipInfo.Route.Remove(NextRouteTarget);
-                    }
+                    ship.transform.position += MoveShip(shipInfo, ship.transform.position);
                 } else {
                     shipInfo.SetShipRoute(ship.transform.position, Nodes);
                 }
@@ -46,18 +46,41 @@ public class ShipMechanics : MonoBehaviour {
                     shipInfo.Dock();
                     shipInfo.Route.Clear();
                 }
+            } else if (shipInfo.Owner != -1) {
+                AI[shipInfo.Owner].PortDecisions();
             }
         }
     }
-    public GameObject NewShip(string owner, int type, Transform parent) {
-        int shipNum = 1;
+    Vector3 MoveShip(ShipInfo shipInfo, Vector3 shipPosition) {
+        Vector3 Wind = GameObject.Find("Compass").GetComponent<WeatherMechanics>().WorldWeather.Wind;
+        Vector2 NextRouteTarget = shipInfo.Route[shipInfo.Route.Count - 1];
+        if (Interactions.InVectDomain(shipPosition, NextRouteTarget, 0.01f)) {
+            shipInfo.Route.Remove(NextRouteTarget);
+            return new Vector2();
+        }
+        Vector3 NextMove = (ShipTypes[shipInfo.Type].Speed / 10 * Interactions.PerfectMove(shipPosition, NextRouteTarget));
+        if (!Interactions.OnLand(shipPosition + NextMove + Wind)) {
+            NextMove += Wind;
+        }
+        NextMove *= Interactions.TimeDilation;
+        if (Interactions.InVectDomain(shipPosition + NextMove, NextRouteTarget, 0.01f)) {
+            shipInfo.Route.Remove(NextRouteTarget);
+        }
+        return NextMove;
+    }
+    public GameObject NewShip(int owner, int type) {
+        int shipID = 1;
         foreach (GameObject ship in Ships) {
-            if (ship.GetComponent<ShipInfo>().Type == type) {
-                shipNum++;
+            if (ship.GetComponent<ShipInfo>().Type == type && ship.GetComponent<ShipInfo>().Owner == owner) {
+                shipID++;
             }
         }
-        GameObject NewShip = new GameObject(ShipTypes[type].Name + " " + shipNum);
-        NewShip.transform.parent = parent;
+        string OwnerAddon = "";
+        if (owner != -1) {
+            OwnerAddon = "AI " + (owner + 1) + " ";
+        }
+        GameObject NewShip = new GameObject(OwnerAddon + ShipTypes[type].Name + " " + shipID);
+        NewShip.transform.parent = transform;
         NewShip.AddComponent<SpriteRenderer>();
         NewShip.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(string.Format("Sprites/Ships/{0}", ShipTypes[type].Name.ToLower()));
         NewShip.GetComponent<SpriteRenderer>().sortingLayerName = "Default";
@@ -73,19 +96,20 @@ public class ShipMechanics : MonoBehaviour {
 }
 public class ShipInfo : MonoBehaviour {
     InteractiveComponents interactions;
-    int previousPort; // Number of last port the ship docked at
-    int targetPort; // Number of port being headed to if the ship is travelling
+    int previousPort; // ID of last port the ship docked at
+    int targetPort; // ID of port being headed to if the ship is travelling
     List<Vector2> route = new List<Vector2>(); // List of points the ship must travel between to reach targetPort
-    int[] inventory; // Includes item id and number of items
+    int[] inventory; // Has item id as index to get number of items
     public InteractiveComponents Interactions {
         set {
             interactions = value; inventory = new int[GameObject.Find("Port").GetComponent<MarketSimulator>().Items.Count];
         }
     }
-    public string Owner { set; get; }
+    public int Owner { set; get; }
     public int Type { set; get; }
     public int Port { set => targetPort = value; get => previousPort; }
     public int[] Inventory { set => inventory = value; get => inventory; }
+    public List<Vector2> Route { get => route; }
     public int GetUsedSlots() {
         int usedSlots = 0;
         foreach (int item in inventory) {
@@ -93,7 +117,6 @@ public class ShipInfo : MonoBehaviour {
         }
         return usedSlots;
     }
-    public List<Vector2> Route { get => route; }
     public void Dock() {
         previousPort = targetPort;
         transform.position = GetPortPos(true);
@@ -102,7 +125,7 @@ public class ShipInfo : MonoBehaviour {
         return previousPort == targetPort;
     }
     public Vector3 GetPortPos(bool portIsTarget) {
-        List<PortInfo> AllPorts = GameObject.Find("Port").GetComponent<PortMechanics>().Ports;
+        PortInfo[] AllPorts = GameObject.Find("Port").GetComponent<PortMechanics>().Ports;
         if (portIsTarget) {
             return GameObject.Find(AllPorts[targetPort].Name).transform.position;
         } else {
@@ -131,7 +154,7 @@ public class ShipInfo : MonoBehaviour {
         }
         route.Add(PreviousPortSeaPos);
         for (int i = 0; i < route.Count - 1; i++) {
-            //Debug.DrawLine(route[i], route[i + 1], Color.green, 15);
+            //Debug.DrawLine(route[i], route[i + 1], Color.green, 15); ------------------------------------------------------------------------------------------------------------------------
         }
     }
     bool TargetHitBeforeLand(Vector2 start, Vector2 target) { // Checks if the straight line between the start and target point is unobstructed
@@ -168,7 +191,7 @@ public class ShipInfo : MonoBehaviour {
             NodesHit.Clear();
             foreach (Vector2 node in nodes) {
                 if (NodeGroups[node] == i && TargetHitBeforeLand(NodesInRoute[NodesInRoute.Count - 1], node)) {
-                    //Debug.DrawLine(NodesInRoute[NodesInRoute.Count - 1], node, Color.yellow, 15);
+                    //Debug.DrawLine(NodesInRoute[NodesInRoute.Count - 1], node, Color.yellow, 15); ------------------------------------------------------------------------------------------------------------------------
                     NodesHit.Add(node); // Adds all nodes in current group that hit
                 }
             }
@@ -180,14 +203,14 @@ public class ShipInfo : MonoBehaviour {
         Dictionary<Vector2, int> NodeGroups = new Dictionary<Vector2, int>() { };
         List<Vector2> UnassignedNodes = nodes.ToList();
         List<Vector2> PreviousNodes = new List<Vector2>() { centrePos };
-        int GroupNum = 1;
+        int GroupID = 1;
         while (UnassignedNodes.Any()) { // Loop runs while there are still unassigned nodes left
             List<Vector2> NewNodes = new List<Vector2>();
             foreach (Vector2 node in UnassignedNodes.ToList()) {
                 foreach (Vector2 previousNode in PreviousNodes) {
                     if (TargetHitBeforeLand(previousNode, node)) {
-                        //Interactions.DrawPoint(node, GroupNum - 1);
-                        NodeGroups.Add(node, GroupNum);
+                        //interactions.DrawPoint(node, GroupID - 1); ------------------------------------------------------------------------------------------------------------------------
+                        NodeGroups.Add(node, GroupID);
                         NewNodes.Add(node);
                         UnassignedNodes.Remove(node);
                         break;
@@ -195,7 +218,7 @@ public class ShipInfo : MonoBehaviour {
                 }
             }
             PreviousNodes = NewNodes;
-            GroupNum++;
+            GroupID++;
         }
         return NodeGroups;
     }
@@ -204,18 +227,22 @@ public class ShipType {
     string name;
     float size;
     float speed;
-    float strength;
     int slots;
-    public ShipType(string name, float size, float speed, float strength, int slots) {
+    public ShipType(string name, float size, float speed, int slots) {
         this.name = name;
         this.size = size;
         this.speed = speed;
-        this.strength = strength;
         this.slots = slots;
     }
     public string Name { get => name; }
     public float Size { get => size; }
     public float Speed { get => speed; }
-    public float Strength { get => strength; }
     public int Slots { get => slots; }
+    public int GetValue(bool saleMarkDown) {
+        float Val = (speed * slots * 20);
+        if (saleMarkDown) {
+            return (int)(Val/1.2f);
+        }
+        return (int)Val;
+    }
 }
