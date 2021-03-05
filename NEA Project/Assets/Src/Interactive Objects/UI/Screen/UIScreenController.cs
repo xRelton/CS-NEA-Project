@@ -54,7 +54,7 @@ public class UIScreenController : MonoBehaviour {
                         } else {
                             SellText = "a docked ship";
                         }
-                        if (MarketSim.PlayerCoins >= CurrentPort.GetMinShipValue()) {
+                        if (MarketSim.PlayerCoins >= CurrentPort.GetMinShipValue() && PlayerShips.Length < 6) {
                             ShipChoiceButtons.Add(new ButtonUIObject("Buy " + BuyText, "ShipRequest", new Vector2(), CurrentPort.ShipsSold, new Vector2(1.2f, 1)));
                         }
                         if (PlayerShips.Length > 1) {
@@ -63,7 +63,6 @@ public class UIScreenController : MonoBehaviour {
                         UIController.CreateScreen(Title, ShipChoiceButtons, true);
                         break;
                     case ("ItemPage"):
-                        //MarketSim.GetPriceAndQuantity(Button.References[1], PortID, true);
                         CreateMarketScreen(Button.References[0], Button.References[1]);
                         break;
                     case ("ManageItem"):
@@ -97,7 +96,7 @@ public class UIScreenController : MonoBehaviour {
                     }
                 } else if (Option == 3) {
                     ShipType CurrentShipType = ShipMechs.ShipTypes[PlayerShips[references[i]].GetComponent<ShipInfo>().Type];
-                    ShipChoiceButtons.Add(new ButtonUIObject(string.Format("{0} ({1})", CurrentShipType.Name, CurrentShipType.GetValue(true)), "ShipSelect", new Vector2(0, -i), new int[] { references[i], Option }, new Vector2(1.2f, 1)));
+                    ShipChoiceButtons.Add(new ButtonUIObject(string.Format("{0} ({1})", PlayerShips[references[i]].name, CurrentShipType.GetValue(true)), "ShipSelect", new Vector2(0, -i), new int[] { references[i], Option }, new Vector2(1.2f, 1)));
                 } else {
                     ShipChoiceButtons.Add(new ButtonUIObject(PlayerShips[references[i]].name, "ShipSelect", new Vector2(0, -i), new int[] { references[i], Option }));
                 }
@@ -142,14 +141,13 @@ public class UIScreenController : MonoBehaviour {
             PageInfo.Add(new TextUIObject("Climate: " + MarketSim.Climates[CurrentPort.Climate], new Vector2(2, -0.5f)));
             UIController.CreateScreen(PageInfo, ItemsButtons, true);
         } else { // If the user has chosen an item to buy / sell
-            int[] PriceAndQuantity = MarketSim.GetPriceAndQuantity(itemID, PortID);
-            int BuyPrice = MarketSim.GetBuyPrice(PriceAndQuantity[0]);
+            int BuyPrice = MarketSim.GetBuyPrice(CurrentPort.Inventory[itemID][1]);
             PageInfo.Add(new TextUIObject(CurrentPort.Name + " Market: " + MarketSim.Items[itemID].Name, new Vector2(0, 3)));
             if (saleSlider == false) {
                 PageInfo.Add(new TextUIObject("Amount in ship: " + Ship.Inventory[itemID], new Vector2(2, 2.1f), new Vector2(0.9f, 0.9f)));
                 PageInfo.Add(new TextUIObject("Price (Denarii): " + BuyPrice, new Vector2(2, 1.3f), new Vector2(0.9f, 0.9f)));
-                PageInfo.Add(new TextUIObject("Port Quantity: " + CurrentPort.Inventory[itemID], new Vector2(2, 0.5f), new Vector2(0.9f, 0.9f)));
-                if (PriceAndQuantity[1] > 0 && MarketSim.PlayerCoins >= BuyPrice && CurrentPort.Inventory[itemID] > 0 && Ship.GetUsedSlots() < ShipMechs.ShipTypes[Ship.Type].Slots) {
+                PageInfo.Add(new TextUIObject("Port Quantity: " + CurrentPort.Inventory[itemID][0], new Vector2(2, 0.5f), new Vector2(0.9f, 0.9f)));
+                if (MarketSim.PlayerCoins >= BuyPrice && CurrentPort.Inventory[itemID][0] > 0 && Ship.GetUsedSlots() < ShipMechs.ShipTypes[Ship.Type].Slots) {
                     ItemsButtons.Add(new ButtonUIObject("Buy", "ManageItem", new Vector2(2, -2.5f), new int[] { shipID, itemID, 0 }, new Vector2(0.6f, 1)));
                 }
                 if (Ship.Inventory[itemID] > 0) {
@@ -161,7 +159,7 @@ public class UIScreenController : MonoBehaviour {
                 List<SliderUIObject> SliderInfo = new List<SliderUIObject>();
                 PageInfo.Add(new TextUIObject("Price (Denarii): ", new Vector2(2, 1.5f)));
                 PageInfo.Add(new TextUIObject("Quantity: ", new Vector2(2, 0.5f)));
-                int SliderMax = CurrentPort.Inventory[itemID];
+                int SliderMax = CurrentPort.Inventory[itemID][0];
                 if (buyOrSell == 0) {
                     if (SliderMax > ShipMechs.ShipTypes[Ship.Type].Slots - Ship.GetUsedSlots()) {
                         SliderMax = ShipMechs.ShipTypes[Ship.Type].Slots - Ship.GetUsedSlots();

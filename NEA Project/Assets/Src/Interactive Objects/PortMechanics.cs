@@ -91,7 +91,7 @@ public class PortMechanics : MonoBehaviour {
 }
 public class PortInfo {
     string name;
-    Dictionary<int, int> inventory = new Dictionary<int, int>(); // Includes item id and number of items
+    Dictionary<int, int[]> inventory = new Dictionary<int, int[]>(); // Includes item id then number of items, price, demand and supply
     int population;
     int climate;
     int[] shipsSold;
@@ -102,7 +102,7 @@ public class PortInfo {
         this.shipsSold = shipsSold;
     }
     public string Name { get => name; }
-    public Dictionary<int, int> Inventory { set => inventory = value; get => inventory; }
+    public Dictionary<int, int[]> Inventory { get => inventory; set => inventory = value; }
     public int Population { get => population; }
     public int Climate { get => climate; }
     public int[] ShipsSold { get => shipsSold; set => shipsSold = value; }

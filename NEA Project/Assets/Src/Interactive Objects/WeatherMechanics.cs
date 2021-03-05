@@ -39,7 +39,7 @@ public class Weather {
             }
         }
         angleGoal = (360 - ((quadrant * 90) + (180 * angle) / Mathf.PI)) % 360;
-        windSpeed = Random.Range(1, 10);
+        windSpeed = Random.Range(1, 9);
         GameObject.Find("Wind Speed").GetComponent<Text>().text = "Wind Speed: " + windSpeed;
     }
     public bool AtGoal() {

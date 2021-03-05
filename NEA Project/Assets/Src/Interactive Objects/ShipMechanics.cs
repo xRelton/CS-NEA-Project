@@ -8,6 +8,7 @@ public class ShipMechanics : MonoBehaviour {
     public List<ShipType> ShipTypes = new List<ShipType>();
     public List<GameObject> Ships = new List<GameObject>();
     List<AIOpponent> AI;
+    int CurrentAI;
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
@@ -27,8 +28,9 @@ public class ShipMechanics : MonoBehaviour {
                 }
             }
         }
+        CurrentAI = 1;
         AI = GameObject.Find("Port").GetComponent<MarketSimulator>().AI;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 20; i++) {
             AI.Add(new AIOpponent(AI.Count));
         }
     }
@@ -77,7 +79,8 @@ public class ShipMechanics : MonoBehaviour {
         }
         string OwnerAddon = "";
         if (owner != -1) {
-            OwnerAddon = "AI " + (owner + 1) + " ";
+            OwnerAddon = "AI " + CurrentAI + " ";
+            CurrentAI++;
         }
         GameObject NewShip = new GameObject(OwnerAddon + ShipTypes[type].Name + " " + shipID);
         NewShip.transform.parent = transform;
