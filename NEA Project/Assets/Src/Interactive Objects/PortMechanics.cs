@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PortMechanics : MonoBehaviour {
+public class PortMechanics : MonoBehaviour { // Controls port creation and effects of clicking on ports
     InteractiveComponents Interactions;
     public PortInfo[] Ports;
     // Start is called before the first frame update
     void Start() {
         Interactions = transform.GetComponentInParent<InteractiveComponents>();
-        Ports = new PortInfo[] {
+        Ports = new PortInfo[] { // Assigns information regarding each port
             new PortInfo("Alexandria", 200000 + 17891, 4, new int[] { 0 }),
             new PortInfo("Athens", 100000 - 802, 0, new int[] { 1 }),
             new PortInfo("Byzantium", 250000 - 28751, 2, new int[] { 2 }),
@@ -89,7 +89,7 @@ public class PortMechanics : MonoBehaviour {
         }
     }
 }
-public class PortInfo {
+public class PortInfo { // Stores data about each port
     string name;
     Dictionary<int, int[]> inventory = new Dictionary<int, int[]>(); // Includes item id then number of items, price, demand and supply
     int population;
@@ -106,7 +106,7 @@ public class PortInfo {
     public int Population { get => population; }
     public int Climate { get => climate; }
     public int[] ShipsSold { get => shipsSold; set => shipsSold = value; }
-    public int GetMinShipValue() {
+    public int GetMinShipValue() { // Returns the minimum value out of all the ships sold at the port
         List<ShipType> ShipTypes = GameObject.Find("Ship").GetComponent<ShipMechanics>().ShipTypes;
         int MinShipValue = ShipTypes[ShipsSold[0]].GetValue(false);
         for (int i = 1; i < ShipsSold.Length; i++) {

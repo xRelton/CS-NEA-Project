@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MarketSimulator : MonoBehaviour {
+public class MarketSimulator : MonoBehaviour { // Controls dynamic market creation
     public int PlayerCoins;
     public float GameTime;
     public string[] Climates; // Named after wikipedia biome page classifications https://upload.wikimedia.org/wikipedia/commons/e/e4/Vegetation.png
@@ -11,7 +11,7 @@ public class MarketSimulator : MonoBehaviour {
     UIScreenController UIScreen;
     PortInfo[] AllPorts;
     bool MonthDone;
-    // Start is called before the first frame update
+    // Start is called before the first frame update where initial values are assigned
     void Start() {
         PlayerCoins = 100;
         GameTime = 0;
@@ -27,7 +27,7 @@ public class MarketSimulator : MonoBehaviour {
         };
         Items.Add(new ItemInfo("Fish", new int[] { 5, 1, 3, 4, 2 }));
         Items.Add(new ItemInfo("Shells", new int[] { 5, 3, 1, 3, 1 }));
-        for (int i = 0; i < AllPorts.Length; i++) {
+        for (int i = 0; i < AllPorts.Length; i++) { // Initialises all the port inventories
             for (int j = 0; j < Items.Count; j++) {
                 float demandShift;
                 float supplyShift;
@@ -43,7 +43,7 @@ public class MarketSimulator : MonoBehaviour {
         }
         GameObject.Find("Money").GetComponent<Text>().text = string.Format("Denarii: {0}", PlayerCoins);
         GameObject.Find("Time").GetComponent<Text>().text = string.Format("Time: {0}", (int)GameTime);
-        if ((int)GameTime % 100 == 0) {
+        if ((int)GameTime % 100 == 0) { // Updates world every 100 ticks of gametime, called a 'month'
             if (!MonthDone) {
                 MonthlyUpdate();
                 MonthDone = true;
@@ -53,7 +53,7 @@ public class MarketSimulator : MonoBehaviour {
         }
         CorrectSliders();
     }
-    void MonthlyUpdate() {
+    void MonthlyUpdate() { // Updates prices and quantities of port
         for (int i = 0; i < AllPorts.Length; i++) {
             for (int j = 0; j < Items.Count; j++) {
                 int[] PriceAndQuantity = GetQuantityAndPrice(j, i);
@@ -90,7 +90,7 @@ public class MarketSimulator : MonoBehaviour {
         }*/
         GameObject.Find("Compass").GetComponent<WeatherMechanics>().WorldWeather.UpdateMonth();
     }
-    void CorrectSliders() {
+    void CorrectSliders() { // Ensures all the maximum values of each price slider is set correctly
         foreach (GameObject slider in UIScreen.Sliders) {
             Slider Slider = slider.GetComponent<Slider>();
             if (slider.name.Split()[1].Contains("Sales")) {
@@ -120,7 +120,7 @@ public class MarketSimulator : MonoBehaviour {
             break;
         }
     }
-    public int[] GetQuantityAndPrice(int itemID, int portID, bool drawDiagram = false) {
+    public int[] GetQuantityAndPrice(int itemID, int portID, bool drawDiagram = false) { // Calculates price and quantity to be added to each port of the input item
         float PED = -1; // (demand gradient m) horizontal = elastic, vertical = inelastic
         float PES = 1; // (supply gradient m) horizontal = elastic, vertical = inelastic
         float demandShift = 5 + AllPorts[portID].Inventory[itemID][2] * 5;
@@ -142,7 +142,7 @@ public class MarketSimulator : MonoBehaviour {
         }
         return new int[] { quantity, price };
     }
-    void DrawDiagram(float demand, float supply, float PED, float PES) {
+    void DrawDiagram(float demand, float supply, float PED, float PES) { // Draws supply and demand diagram
         Debug.DrawLine(new Vector2(0, 0), new Vector2(0, 5), Color.black, 15);
         Debug.DrawLine(new Vector2(0, 0), new Vector2(5, 0), Color.black, 15);
         Debug.DrawRay(new Vector2(0, demand), new Vector2(5, 5 * PED), Color.red, 15);
@@ -150,10 +150,10 @@ public class MarketSimulator : MonoBehaviour {
         float quantity = (supply - demand) / (PED - PES);
         transform.GetComponentInParent<InteractiveComponents>().DrawPoint(new Vector2(quantity, PED * quantity + demand), 4);
     }
-    public int GetBuyPrice(int sellPrice) {
+    public int GetBuyPrice(int sellPrice) { // Outputs the price of a bought item given the input sell price
         return 1 | (int)Mathf.Round(sellPrice * 1.2f);
     }
-    public void ItemInteraction(string interaction, GameObject ship, int itemID, int portID, int numItems) {
+    public void ItemInteraction(string interaction, GameObject ship, int itemID, int portID, int numItems) { // Used to buy or sell items
         ShipInfo Ship = ship.GetComponent<ShipInfo>();
         int ItemValue = AllPorts[portID].Inventory[itemID][1];
         if (interaction == "BuyItem") {
@@ -169,14 +169,14 @@ public class MarketSimulator : MonoBehaviour {
             PlayerCoins += ItemValue * numItems;
         }
     }
-    public void PredictDemandAndSupplyShift(int itemID, int portID, out float demandShift, out float supplyShift) {
+    public void PredictDemandAndSupplyShift(int itemID, int portID, out float demandShift, out float supplyShift) { // Used by ships to predict what supply and demand will be at different ports
         ItemInfo Item = Items[itemID];
         PortInfo Port = AllPorts[portID];
         demandShift = (float)System.Math.Log10(Port.Population);
         supplyShift = Item.ClimateAbundance[Port.Climate];
     }
 }
-public class ItemInfo {
+public class ItemInfo { // Stores base data for each item
     string name;
     int[] climateAbundance; // Climate number, abundance of resource in climate
     public string Name { get => name; }
@@ -186,7 +186,7 @@ public class ItemInfo {
         this.climateAbundance = climateAbundance;
     }
 }
-public class AIOpponent {
+public class AIOpponent { // Stores base data for each AI including decision-making functions
     ShipMechanics ShipMechs;
     MarketSimulator MarketSim;
     ShipInfo Ship;
@@ -194,18 +194,18 @@ public class AIOpponent {
     public AIOpponent(int id) {
         ShipMechs = GameObject.Find("Ship").GetComponent<ShipMechanics>();
         MarketSim = GameObject.Find("Port").GetComponent<MarketSimulator>();
-        ShipMechs.Ships.Add(ShipMechs.NewShip(id, Random.Range(0, 8)));
+        ShipMechs.Ships.Add(ShipMechs.NewShip(id, Random.Range(0, 8))); // Creates ship of new AI
         Ship = ShipMechs.Ships[ShipMechs.Ships.Count - 1].GetComponent<ShipInfo>();
         InvBuyPrices = new int[Ship.Inventory.Length];
         Ship.Port = Random.Range(0, 6);
         Ship.Dock();
-        Ship.gameObject.GetComponent<SpriteRenderer>().color = Color.grey;
+        Ship.gameObject.GetComponent<SpriteRenderer>().color = Color.grey; // Sets AI to grey colour
     }
     public void PortDecisions() {
         MarketInteraction();
         SelectDestination();
     }
-    void MarketInteraction() {
+    void MarketInteraction() { // AI ship buys or sells items when arriving at a new port
         for (int i = 0; i < InvBuyPrices.Length; i++) {
             PortInfo[] AllPorts = GameObject.Find("Port").GetComponent<PortMechanics>().Ports;
             if (Ship.Inventory[i] > 0 && InvBuyPrices[i] < AllPorts[Ship.Port].Inventory[i][1]) { // Sell item if ship has it and it's worth more than bought for

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIScreenController : MonoBehaviour {
+public class UIScreenController : MonoBehaviour { // Controls effects of interacting with UI objects (except for initial port pressing and game-speed buttons)
     public int PortID;
     public List<GameObject> Texts;
     public List<GameObject> Sliders;
@@ -27,19 +27,19 @@ public class UIScreenController : MonoBehaviour {
             if (Button.ButtonPressed()) {
                 GameObject.Find("UI Screen").SetActive(false);
                 switch (Button.Action) {
-                    case ("SetInitialPort"):
+                    case ("SetInitialPort"): // Sets the player's ship at the port they wish to start at
                         int SelectedPortID = Array.FindIndex(GameObject.Find("Port").GetComponent<PortMechanics>().Ports, element => element.Name == Button.name.Replace("Button ", ""));
                         ShipMechs.Ships.Add(ShipMechs.NewShip(-1, 5));
                         ShipMechs.Ships[ShipMechs.Ships.Count - 1].GetComponent<ShipInfo>().Port = SelectedPortID;
                         ShipMechs.Ships[ShipMechs.Ships.Count - 1].GetComponent<ShipInfo>().Dock();
                         break;
-                    case ("ShipRequest"):
+                    case ("ShipRequest"): // Creates a list of ships that may be sent somewhere, open a market, be bought or be sold
                         RequestShip(Button.References, Button.transform.GetComponentInChildren<Text>().text);
                         break;
-                    case ("ShipSelect"):
+                    case ("ShipSelect"): // Actually does that action of sending the ship, opening the market, buying the ship or selling it
                         SelectedShipOptions(Button.References[1], Button.References[0]);
                         break;
-                    case ("ShipMarket"):
+                    case ("ShipMarket"): // Opens the market screen for buying or selling ships
                         List<TextUIObject> Title = new List<TextUIObject>();
                         Title.Add(new TextUIObject(CurrentPort.Name + ": Ship Market", new Vector2(0, 3)));
                         List<ButtonUIObject> ShipChoiceButtons = new List<ButtonUIObject>();
@@ -62,13 +62,13 @@ public class UIScreenController : MonoBehaviour {
                         }
                         UIController.CreateScreen(Title, ShipChoiceButtons, true);
                         break;
-                    case ("ItemPage"):
+                    case ("ItemPage"): // Opens the page with information about an item
                         CreateMarketScreen(Button.References[0], Button.References[1]);
                         break;
-                    case ("ManageItem"):
+                    case ("ManageItem"): // Opens the page for buying or selling an item
                         CreateMarketScreen(Button.References[0], Button.References[1], Button.References[2], true);
                         break;
-                    case ("BuyItem"): case ("SellItem"):
+                    case ("BuyItem"): case ("SellItem"): // Doing the action of buying or selling an item
                         foreach (GameObject slider in Sliders) {
                             if (slider.name.Split()[1].Contains("Sales")) {
                                 MarketSim.ItemInteraction(Button.Action, PlayerShips[Button.References[0]], Button.References[1], PortID, (int)slider.GetComponent<Slider>().value);
@@ -80,7 +80,7 @@ public class UIScreenController : MonoBehaviour {
             }
         }
     }
-    void RequestShip(int[] references, string text) {
+    void RequestShip(int[] references, string text) { // Creates a list of ships that may be sent somewhere, open a market, be bought or be sold
         int Option = Array.FindIndex(new string[] { "Send", "Open", "Buy", "Sell" }, element => element == text.Split(' ')[0]);
         if (references.Length == 1) {
             SelectedShipOptions(Option, references[0]);
@@ -104,7 +104,7 @@ public class UIScreenController : MonoBehaviour {
             UIController.CreateScreen(Title, ShipChoiceButtons, true);
         }
     }
-    void SelectedShipOptions(int option, int shipID) {
+    void SelectedShipOptions(int option, int shipID) { // Actually does that action of sending the ship, opening the market, buying the ship or selling it
         switch (option) {
             case 0: // Send ship
                 PlayerShips[shipID].GetComponent<ShipInfo>().Port = PortID;
@@ -125,7 +125,7 @@ public class UIScreenController : MonoBehaviour {
                 break;
         }
     }
-    void CreateMarketScreen(int shipID, int itemID = -1, int buyOrSell = -1, bool saleSlider = false) {
+    void CreateMarketScreen(int shipID, int itemID = -1, int buyOrSell = -1, bool saleSlider = false) { // Creates a page of the market of a port where items are bought or sold in the UI
         ShipInfo Ship = PlayerShips[shipID].GetComponent<ShipInfo>();
         List<ButtonUIObject> ItemsButtons = new List<ButtonUIObject>();
         int move = 0;

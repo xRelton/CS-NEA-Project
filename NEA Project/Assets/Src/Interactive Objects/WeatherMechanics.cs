@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class WeatherMechanics : MonoBehaviour {
+public class WeatherMechanics : MonoBehaviour { // Creates weather and controls compass movement
     public Weather WorldWeather;
     void Start() { // Start is called before the first frame update
         WorldWeather = new Weather();
@@ -13,13 +13,13 @@ public class WeatherMechanics : MonoBehaviour {
         }
     }
 }
-public class Weather {
+public class Weather { // Controls weather randomisation and compass displaying
     int windSpeed;
     Vector2 windDirection;
     float angleGoal;
     float anglePosition = 0;
-    public Vector2 Wind { get => windSpeed * windDirection/windDirection.magnitude/7500; }
-    public void UpdateMonth() {
+    public Vector2 Wind { get => windSpeed * windDirection/windDirection.magnitude/7500; } // Outputs the vector of the wind and its power multiplied
+    public void UpdateMonth() { // Sets the new wind direction then calculates bearing angle from due north for the compass to be set at
         do {
             windDirection = new Vector2(Random.Range(-3, 4), Random.Range(-3, 4));
         } while (windDirection.magnitude == 0);
@@ -42,7 +42,7 @@ public class Weather {
         windSpeed = Random.Range(1, 9);
         GameObject.Find("Wind Speed").GetComponent<Text>().text = "Wind Speed: " + windSpeed;
     }
-    public bool AtGoal() {
+    public bool AtGoal() { // Checks if the compass arrow is in the right position and stops its movement
         if (Mathf.Round(anglePosition) == Mathf.Round(angleGoal)) {
             if (anglePosition != angleGoal) {
                 angleGoal = (angleGoal + 360) % 360;
@@ -54,7 +54,7 @@ public class Weather {
         }
         return false;
     }
-    public void MoveToGoal() {
+    public void MoveToGoal() { // Moves compass arrow to the angleGoal so there is a smooth on-screen movement
         float TimeDilation = GameObject.Find("Interactive Object").GetComponent<InteractiveComponents>().TimeDilation * 30;
         if (Mathf.Abs(anglePosition - (angleGoal + 360)) < Mathf.Abs(anglePosition - angleGoal)) {
             angleGoal += 360;

@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-public class FlyCamera : MonoBehaviour {
+public class FlyCamera : MonoBehaviour { // Controls user camera movement and response to keyboard inputs
     float mainSpeed = 10.0f; // Regular speed
     float shiftAdd = 20.0f; // Multiplied by how long shift is held.  Basically running
     float maxShift = 1000.0f; // Maximum speed when holdin gshift
@@ -12,10 +12,9 @@ public class FlyCamera : MonoBehaviour {
     };
 
     void Update() {
-        // Keyboard commands
         if (GameObject.Find("Interactive Object").transform.GetChild(0).GetChild(1).gameObject.activeSelf == false) {
-            Vector3 p = GetCameraControlInputs();
-            if (Input.GetKey(KeyCode.LeftShift)) {
+            Vector3 p = GetCameraControlInputs(); // Keyboard commands
+            if (Input.GetKey(KeyCode.LeftAlt)) { // Speeds up camera movement when shift left alt is pressed
                 p = p * shiftAdd;
                 p.x = Mathf.Clamp(p.x, -maxShift, maxShift);
                 p.y = Mathf.Clamp(p.y, -maxShift, maxShift);
@@ -48,7 +47,7 @@ public class FlyCamera : MonoBehaviour {
         }
     }
 
-    private char OutBounds(float val, float[] bound) {
+    private char OutBounds(float val, float[] bound) { // Outputs if an inputted value is out of an array of 2 bounds
         if (val <= bound[0]) {
             return '<';
         } else if (val >= bound[1]) {
@@ -57,7 +56,7 @@ public class FlyCamera : MonoBehaviour {
         return 'i'; // Stands for "in bounds"
     }
 
-    private void SetTransform(char choice, float val) {
+    private void SetTransform(char choice, float val) { // Sets the camera position's x, y or z to inputted value
         if (choice == 'x') {
             transform.position = new Vector3(val, transform.position.y, transform.position.z);
         } else if (choice == 'y') {
@@ -67,7 +66,7 @@ public class FlyCamera : MonoBehaviour {
         }
     }
 
-    private void AddTransform(char choice, float val) {
+    private void AddTransform(char choice, float val) { // Adds the inputted value to the camera position's x, y or z 
         if (choice == 'x') {
             transform.position += new Vector3(val, 0, 0);
         } else if (choice == 'y') {
@@ -77,7 +76,7 @@ public class FlyCamera : MonoBehaviour {
         }
     }
 
-    private char GetCurrentBound(char choice) {
+    private char GetCurrentBound(char choice) { // Checks if the x, y or z is out of bounds
         if (choice == 'x') {
             return OutBounds(transform.position.x, bounds[0]);
         } else if (choice == 'y') {
@@ -88,7 +87,7 @@ public class FlyCamera : MonoBehaviour {
         return 'n'; // stands for "no correct choice given"
     }
 
-    private void BoundCorrect(char choice, float zoomEffector) {
+    private void BoundCorrect(char choice, float zoomEffector) { // Moves camera position back into bounds if it is out
         char currentBound = GetCurrentBound(choice);
         if (choice == 'x') {
             zoomEffector /= 3;

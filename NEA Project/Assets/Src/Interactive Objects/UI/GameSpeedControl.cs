@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class GameSpeedControl : MonoBehaviour {
+public class GameSpeedControl : MonoBehaviour { // Controls time dilation
     InteractiveComponents Interactions;
     string SpeedName;
     Dictionary<string, float> SpeedVals = new Dictionary<string, float>();
@@ -24,7 +24,7 @@ public class GameSpeedControl : MonoBehaviour {
             Material UIObjectMaterial = UIObject.GetComponent<Renderer>().material;
             if (Interactions.MouseOnObject(UIObject)) {
                 if (Input.GetMouseButtonDown(0)) {
-                    SpeedName = UIObject.name;
+                    SpeedName = UIObject.name; // Changes the game speed to the new value when user clicks on one of them
                 }
             }
             if (UIObject.name != SpeedName && UIObjectMaterial.GetColor("_Color") != Color.white) {
@@ -33,6 +33,6 @@ public class GameSpeedControl : MonoBehaviour {
                 UIObjectMaterial.SetColor("_Color", Color.green);
             }
         }
-        Interactions.TimeDilation = Time.deltaTime * SpeedVals[SpeedName];
+        Interactions.TimeDilation = Time.deltaTime * SpeedVals[SpeedName]; // Assigns time dilation value to delta time multiplied by the user-set game speed applied
     }
 }

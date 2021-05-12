@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-public class ShipMechanics : MonoBehaviour {
+public class ShipMechanics : MonoBehaviour { // Controls ship creation and movement
     InteractiveComponents Interactions;
     List<Vector2> Nodes = new List<Vector2>();
     public List<ShipType> ShipTypes = new List<ShipType>();
@@ -30,7 +30,7 @@ public class ShipMechanics : MonoBehaviour {
         }
         CurrentAI = 1;
         AI = GameObject.Find("Port").GetComponent<MarketSimulator>().AI;
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 20; i++) { // Creates 20 AI on the game screen and adds them to the AI list
             AI.Add(new AIOpponent(AI.Count));
         }
     }
@@ -38,7 +38,7 @@ public class ShipMechanics : MonoBehaviour {
     void Update() {
         foreach (GameObject ship in Ships) {
             ShipInfo shipInfo = ship.GetComponent<ShipInfo>();
-            if (!shipInfo.Docked()) {
+            if (!shipInfo.Docked()) { // Moves ship to next route position if not docked
                 if (shipInfo.Route.Any()) {
                     ship.transform.position += MoveShip(shipInfo, ship.transform.position);
                 } else {
@@ -48,29 +48,25 @@ public class ShipMechanics : MonoBehaviour {
                     shipInfo.Dock();
                     shipInfo.Route.Clear();
                 }
-            } else if (shipInfo.Owner != -1) {
+            } else if (shipInfo.Owner != -1) { // Does AI ship market interaction then new port choice decision if docked
                 AI[shipInfo.Owner].PortDecisions();
             }
         }
     }
-    Vector3 MoveShip(ShipInfo shipInfo, Vector3 shipPosition) {
+    Vector3 MoveShip(ShipInfo shipInfo, Vector3 shipPosition) { // Moves ship towards the next route target unless they're going to hit land, then they move around it
         Vector3 Wind = GameObject.Find("Compass").GetComponent<WeatherMechanics>().WorldWeather.Wind;
         Vector2 NextRouteTarget = shipInfo.Route[shipInfo.Route.Count - 1];
         if (Interactions.InVectDomain(shipPosition, NextRouteTarget, 0.01f)) {
             shipInfo.Route.Remove(NextRouteTarget);
-            return new Vector2();
+            NextRouteTarget = shipInfo.Route[shipInfo.Route.Count - 1];
         }
         Vector3 NextMove = (ShipTypes[shipInfo.Type].Speed / 10 * Interactions.PerfectMove(shipPosition, NextRouteTarget));
         if (!Interactions.OnLand(shipPosition + NextMove + Wind)) {
             NextMove += Wind;
         }
-        NextMove *= Interactions.TimeDilation;
-        if (Interactions.InVectDomain(shipPosition + NextMove, NextRouteTarget, 0.01f)) {
-            shipInfo.Route.Remove(NextRouteTarget);
-        }
-        return NextMove;
+        return NextMove * Interactions.TimeDilation;
     }
-    public GameObject NewShip(int owner, int type) {
+    public GameObject NewShip(int owner, int type) { // Creates new ship and assigns it to either the player or AI then assigns a ship type to it which decides it's other factors
         int shipID = 1;
         foreach (GameObject ship in Ships) {
             if (ship.GetComponent<ShipInfo>().Type == type && ship.GetComponent<ShipInfo>().Owner == owner) {
@@ -97,7 +93,7 @@ public class ShipMechanics : MonoBehaviour {
         return NewShip;
     }
 }
-public class ShipInfo : MonoBehaviour {
+public class ShipInfo : MonoBehaviour { // Stores data about ships and calculates route navigation
     InteractiveComponents interactions;
     int previousPort; // ID of last port the ship docked at
     int targetPort; // ID of port being headed to if the ship is travelling
@@ -113,21 +109,21 @@ public class ShipInfo : MonoBehaviour {
     public int Port { set => targetPort = value; get => previousPort; }
     public int[] Inventory { set => inventory = value; get => inventory; }
     public List<Vector2> Route { get => route; }
-    public int GetUsedSlots() {
+    public int GetUsedSlots() { // Calculates how many slots the ship has filled with items
         int usedSlots = 0;
         foreach (int item in inventory) {
             usedSlots += item;
         }
         return usedSlots;
     }
-    public void Dock() {
+    public void Dock() { // Stops ship movement at destination and sets position correctly
         previousPort = targetPort;
         transform.position = GetPortPos(true);
     }
-    public bool Docked() {
+    public bool Docked() { // Checks if ship movement has been stopped at a port
         return previousPort == targetPort;
     }
-    public Vector3 GetPortPos(bool portIsTarget) {
+    public Vector3 GetPortPos(bool portIsTarget) { // Gets the position of the initial or target port
         PortInfo[] AllPorts = GameObject.Find("Port").GetComponent<PortMechanics>().Ports;
         if (portIsTarget) {
             return GameObject.Find(AllPorts[targetPort].Name).transform.position;
@@ -135,7 +131,7 @@ public class ShipInfo : MonoBehaviour {
             return GameObject.Find(AllPorts[previousPort].Name).transform.position;
         }
     }
-    Vector2 GetSeaPos(Vector2 shipPos, Vector2 targetPos) {
+    Vector2 GetSeaPos(Vector2 shipPos, Vector2 targetPos) { // Gets the position that lies outside a port on the open ocean
         List<Vector2> SurroundingArea = new List<Vector2>();
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
@@ -147,7 +143,7 @@ public class ShipInfo : MonoBehaviour {
         }
         return interactions.ClosestVector(SurroundingArea, targetPos);
     }
-    public void SetShipRoute(Vector3 shipPosition, List<Vector2> nodes) {
+    public void SetShipRoute(Vector3 shipPosition, List<Vector2> nodes) { // Sets the ship's route that it will travel along using the node system
         Vector2 PreviousPortSeaPos = GetSeaPos(shipPosition, GetPortPos(true));
         Vector2 TargetPortSeaPos = GetSeaPos(GetPortPos(true), GetPortPos(false));
         route.Add(GetPortPos(true));
@@ -176,7 +172,7 @@ public class ShipInfo : MonoBehaviour {
         }
         return true;
     }
-    List<Vector2> BurrowForRoute(Vector2 startPos, Vector2 targetPos, List<Vector2> nodes) {
+    List<Vector2> BurrowForRoute(Vector2 startPos, Vector2 targetPos, List<Vector2> nodes) { // Iterates over nodes to work out which way through can be taken to output the final route
         Dictionary<Vector2, int> NodeGroups = GetNodeGroups(Route[1], nodes);
         List<Vector2> NodesHit = new List<Vector2>() { }; // Nodes from the lowest numbered group that have line of sight with starting port
         int CurrentGroup = -1;
@@ -202,7 +198,7 @@ public class ShipInfo : MonoBehaviour {
         NodesInRoute.Reverse();
         return NodesInRoute;
     }
-    Dictionary<Vector2, int> GetNodeGroups(Vector2 centrePos, List<Vector2> nodes) {
+    Dictionary<Vector2, int> GetNodeGroups(Vector2 centrePos, List<Vector2> nodes) { // Assigns a number to each node based on how many more nodes it will have to go through to get to the destination
         Dictionary<Vector2, int> NodeGroups = new Dictionary<Vector2, int>() { };
         List<Vector2> UnassignedNodes = nodes.ToList();
         List<Vector2> PreviousNodes = new List<Vector2>() { centrePos };
@@ -226,7 +222,7 @@ public class ShipInfo : MonoBehaviour {
         return NodeGroups;
     }
 }
-public class ShipType {
+public class ShipType { // Stores data about different types of ships
     string name;
     float size;
     float speed;
@@ -241,7 +237,7 @@ public class ShipType {
     public float Size { get => size; }
     public float Speed { get => speed; }
     public int Slots { get => slots; }
-    public int GetValue(bool saleMarkDown) {
+    public int GetValue(bool saleMarkDown) { // Calculates value of ship based on abilities
         float Val = (speed * slots * 20);
         if (saleMarkDown) {
             return (int)(Val/1.2f);
